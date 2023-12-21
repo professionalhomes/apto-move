@@ -1,0 +1,3 @@
+src/tests
+*.move
+**/Move.toml

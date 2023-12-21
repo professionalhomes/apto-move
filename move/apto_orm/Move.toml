@@ -1,0 +1,12 @@
+[package]
+name = 'AptoORM'
+version = '1.0.0'
+
+[addresses]
+apto_orm = "_"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "6904575b13" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token", rev = "6904575b13" }
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token-objects", rev = "6904575b13" }
+Utilities = { local = "../utilities" }

@@ -1,0 +1,10 @@
+[package]
+name = "Utilities"
+version = "1.0.0"
+upgrade_policy = "compatible"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "6904575b13" }
+
+[addresses]
+apto_orm = "_"

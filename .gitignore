@@ -1,0 +1,12 @@
+.aptos
+.key
+node_modules
+.env
+move/*/build
+**/move/build
+typescript/dist
+build.log
+server/dist
+typescript/src/tests/.move
+server/src/.move
+./move
