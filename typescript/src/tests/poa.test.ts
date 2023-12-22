@@ -11,7 +11,7 @@ const package_move_path = path.join(__dirname, '.move/poa_test');
   package_name,
   package_creator,
   class_name: 'PoA Test',
-  class_uri: 'https://example.com/poa_test',
+  class_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
   class_description: 'PoA Test token',
   token_use_property_map: true,
   royalty_present: false,
@@ -22,7 +22,7 @@ export class PoaToken {
   @OrmField({ immutable: true })
   name!: string;
 
-  @OrmField({ constant: 'https://example.com/poa_test' })
+  @OrmField({ constant: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png' })
   uri!: string;
 
   @OrmField({ constant: 'The description of the token' })

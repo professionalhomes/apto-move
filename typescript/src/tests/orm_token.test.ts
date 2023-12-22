@@ -12,7 +12,7 @@ const package_move_path = path.join(__dirname, '.move/orm_token_test');
   package_creator,
   index_fields: ['id'],
   class_name: 'AptoORM Membership',
-  class_uri: 'https://example.com',
+  class_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
   class_description: 'Membership token for AptoORM users',
   max_supply: 1000n,
   token_use_property_map: false,
@@ -27,7 +27,7 @@ export class Membership {
   @OrmField({ immutable: true })
   name!: string;
 
-  @OrmField({ constant: 'http://uri-constant' })
+  @OrmField({ constant: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png' })
   uri!: string;
 
   @OrmField({ constant: 'The description of the token' })

@@ -43,7 +43,7 @@ import { OrmTokenClass, OrmField, OrmIndexField } from 'apto_orm';
   package_creator: '${toAddress(package_creator).toShortString()}',
   package_name: '${package_name}',
   class_name: 'AptoORM ${class_name}',
-  class_uri: 'https://neoul.github.io/apto_orm/base_token',
+  class_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
   class_description: 'Sample AptoORM Token',
   max_supply: 1000n,
   token_use_property_map: false,
