@@ -259,7 +259,7 @@ program
   )
   .action(async function () {
     const client = loadOrmClient(program);
-    const { key, data } = this.opts();
+    const { key, data, to } = this.opts();
     const class_name = this.opts()?.class;
     let package_name: string;
     let package_path: string = this.args[0];
@@ -279,7 +279,9 @@ program
     const target_class = ormclasses[0];
     const dataobj = Object.create((target_class as any).prototype);
     Object.assign(dataobj, JSON.parse(data));
-    const txn = await client.createTxn(package_owner, dataobj);
+    const txn = to
+      ? await client.createTxn(package_owner, dataobj)
+      : await client.createToTxn(package_owner, to, dataobj);
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(`txn: ${txnr.hash}`);
@@ -327,7 +329,6 @@ program
     const objects = client.retrieveObjectFromTxnr(txnr, { object_type: target_class });
     console.log(`updated objects:`, objects);
   });
-
 
 program
   .command('delete')
