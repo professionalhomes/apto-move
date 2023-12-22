@@ -162,7 +162,7 @@ module apto_orm::orm_object {
             };
         };
         let transfer_ref = object::generate_transfer_ref(ref);
-        if (direct_transfer) {
+        if (!direct_transfer) {
             object::disable_ungated_transfer(&transfer_ref);
         };
         if (indirect_transfer_by_creator || indirect_transfer_by_owner) {
