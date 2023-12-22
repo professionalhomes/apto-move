@@ -1,6 +1,6 @@
 {
   "name": "apto_orm",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "description": "AptosORM is a library that makes it easy to use Aptos Blockchain",
   "main": "dist/sdk/index.js",
   "bin": {

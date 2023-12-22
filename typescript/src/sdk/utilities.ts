@@ -61,7 +61,7 @@ export function toAddress(signer: AptosAccount | MaybeHexString) {
 // [FIXME] This is a temporary solution to get the address of AptoORM.
 export function getOrmAddress() {
   return ensureAddress(
-    process.env.APTO_ORM_ADDR || '0xa1510f72350b7272ff366462c4dd9d65b40975976c02df7c7406e6b2cfba36b0'
+    process.env.APTO_ORM_ADDR || '0xfacedd48d64a2ee04cbdf5c17608bd7a5ea9144fa1fe65320c588fffea131de3'
   );
 }
 
