@@ -388,8 +388,8 @@ export class OrmClient extends AptosClient {
 
   async createToTxn<OrmObject extends OrmObjectLiteral>(
     user: AptosAccount | MaybeHexString,
-    to: MaybeHexString,
     obj: OrmObjectTarget<OrmObject>,
+    to: MaybeHexString,
     options?: OrmTxnOptions
   ) {
     const { metadata, object } = loadOrmClassMetadata(obj);

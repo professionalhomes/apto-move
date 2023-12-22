@@ -109,7 +109,7 @@ describe('orm_object_test', () => {
     console.log('createTxn', txnr.hash);
     console.log('retrieveObjectFromTxnr', b_address);
 
-    txn = await client.createToTxn(package_creator, '0xffff', b);
+    txn = await client.createToTxn(package_creator, b, '0xffff');
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn);
     const c_address = client.retrieveObjectFromTxnr(txnr, { change_type: 'write_resource' });

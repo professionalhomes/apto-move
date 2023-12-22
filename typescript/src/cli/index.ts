@@ -277,11 +277,14 @@ program
       throw new Error(`class '${class_name}' is ambiguous`);
     }
     const target_class = ormclasses[0];
+    if (!target_class) {
+      throw new Error(`class '${class_name}' not found`);
+    }
     const dataobj = Object.create((target_class as any).prototype);
     Object.assign(dataobj, JSON.parse(data));
     const txn = to
-      ? await client.createTxn(package_owner, dataobj)
-      : await client.createToTxn(package_owner, to, dataobj);
+      ? await client.createToTxn(package_owner, dataobj, to)
+      : await client.createTxn(package_owner, dataobj);
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(`txn: ${txnr.hash}`);
