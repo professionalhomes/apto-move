@@ -1,32 +1,48 @@
 #!/bin/bash
+# cd /
+# service postgresql start
+# sudo -u postgres createuser root
+# sudo -u postgres createdb local_testnet
+# sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'mypassword'"
+# sudo -u postgres psql -c "grant all privileges on database local_testnet to postgres;"
 
+cd /root
 aptos node run-local-testnet --with-faucet --faucet-port 8081 --assume-yes &
+# aptos node run-local-testnet --with-indexer-api --use-host-postgres --host-postgres-password mypassword &
 
+# Image postgres:14.9 not found, pulling it now...
+# Image hasura/graphql-engine:v2.35.0 not found, pulling it now...
 
+# Readiness endpoint: http://127.0.0.1:8070/
+
+# Faucet is starting, please wait...
+# Postgres is starting, please wait...
+# Node API is starting, please wait...
 # Completed generating configuration:
-#         Log file: "/home/willing/projects/orm/.aptos/testnet/validator.log"
-#         Test dir: "/home/willing/projects/orm/.aptos/testnet"
-#         Aptos root key path: "/home/willing/projects/orm/.aptos/testnet/mint.key"
-#         Waypoint: 0:87ff2f76e348d6b99c16c4268b25dfe4326086b5f9894ac3540a7a575233d60d
+#         Log file: "/home/willing/projects/apto_orm/.aptos/testnet/validator.log"
+#         Test dir: "/home/willing/projects/apto_orm/.aptos/testnet"
+# Indexer API is starting, please wait...
+#         Aptos root key path: "/home/willing/projects/apto_orm/.aptos/testnet/mint.key"
+# Transaction stream is starting, please wait...
+#         Waypoint: 0:9015d25c56a461a62cd122c1550ef701c985381f05dfa1c79a04705c32bc6ce3
 #         ChainId: 4
-#         REST API endpoint: http://0.0.0.0:8080
-#         Metrics endpoint: http://0.0.0.0:9101/metrics
+#         REST API endpoint: http://127.0.0.1:8080
+#         Metrics endpoint: http://127.0.0.1:9101/metrics
 #         Aptosnet fullnode network endpoint: /ip4/0.0.0.0/tcp/6181
-#         Indexer gRPC node stream endpoint: 0.0.0.0:50051
+#         Indexer gRPC node stream endpoint: 127.0.0.1:50051
 
 # Aptos is running, press ctrl-c to exit
 
-# Readiness endpoint: http://0.0.0.0:8090/
 
-# Node API is starting, please wait...
-# Faucet is starting, please wait...
-# Transaction stream is starting, please wait...
+# Node API is ready. Endpoint: http://127.0.0.1:8080/
+# Postgres is ready. Endpoint: postgres://postgres@127.0.0.1:5433/local_testnet
+# Transaction stream is ready. Endpoint: http://127.0.0.1:50051/
+# Indexer API is ready. Endpoint: http://127.0.0.1:8090/
+# Faucet is ready. Endpoint: http://127.0.0.1:8081/
 
-# Node API is running. Endpoint: http://0.0.0.0:8080/
-# Transaction stream is running. Endpoint: http://0.0.0.0:50051/
-# Faucet is running. Endpoint: http://0.0.0.0:8081/
+# Applying post startup steps...
 
-# All services are running, you can now use the local testnet!
+# Setup is complete, you can now use the local testnet!
 
 function init() {
   while :
