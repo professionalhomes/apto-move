@@ -10,9 +10,9 @@ const package_move_path = path.join(__dirname, '.move/poa_test');
 @OrmTokenClass({
   package_name,
   package_creator,
-  class_name: 'PoA Test',
-  class_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
-  class_description: 'PoA Test token',
+  collection_name: 'PoA Test',
+  collection_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
+  collection_description: 'PoA Test token',
   token_use_property_map: true,
   royalty_present: false,
   royalty_denominator: 100,

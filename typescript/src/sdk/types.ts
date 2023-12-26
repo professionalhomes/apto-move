@@ -56,11 +56,11 @@ export interface OrmFieldData extends OrmFieldConfig {
 /** ORM Token configuration */
 export type OrmTokenConfig = {
   /** The representative name of the token collection (= Aptos Collection Name) */
-  class_name: string;
+  collection_name: string;
   /** The representative URI of the token collection (= Aptos Collection URI) */
-  class_uri: string;
+  collection_uri: string;
   /** The representative description of the token collection (= Aptos Collection Description) */
-  class_description: string;
+  collection_description: string;
   /** The maximum token supply of the AptoORM class (= Aptos Collection Max Supply) */
   max_supply: number | bigint;
   /** Whether the token uses property map */

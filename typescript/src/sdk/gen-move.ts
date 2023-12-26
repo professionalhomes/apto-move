@@ -104,7 +104,7 @@ export const initModule = (class_data: OrmClassMetadata) => {
   }
   code.push(print(`package,`));
   if (token_config) {
-    code.push(print(`string::utf8(b"${token_config.class_name}"),`));
+    code.push(print(`string::utf8(b"${token_config.collection_name}"),`));
   } else {
     code.push(print(`string::utf8(CLASS_NAME),`));
   }
@@ -121,8 +121,8 @@ export const initModule = (class_data: OrmClassMetadata) => {
   if (token_config) {
     const class_collection_opt = [
       class_opt.join(', '),
-      constString(token_config.class_uri),
-      constString(token_config.class_description),
+      constString(token_config.collection_uri),
+      constString(token_config.collection_description),
       token_config.max_supply,
       token_config.token_use_property_map,
       token_config.royalty_present,
@@ -193,7 +193,7 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
       const initial_token_name = `string_utils::format${class_data.index_fields.length}(&b"${format}", ${args})`;
       code.push(indent(`let ref = token::create_named_token(`));
       code.push(print(`&creator_signer,`));
-      code.push(print(`string::utf8(b"${class_data.token_config.class_name}"),`));
+      code.push(print(`string::utf8(b"${class_data.token_config.collection_name}"),`));
       code.push(print(`description,`));
       code.push(print(`${initial_token_name},`));
       code.push(print(`option::none(),`));
@@ -204,7 +204,7 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
     } else {
       code.push(indent(`let ref = token::create(`));
       code.push(print(`&creator_signer,`));
-      code.push(print(`string::utf8(b"${class_data.token_config.class_name}"),`));
+      code.push(print(`string::utf8(b"${class_data.token_config.collection_name}"),`));
       code.push(print(`description,`));
       code.push(print(`name,`));
       code.push(print(`option::none(),`));

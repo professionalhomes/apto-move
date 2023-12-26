@@ -6,12 +6,8 @@ import orm, {
   OrmClient,
   OrmFreePostpayClient,
   OrmFreePrepayClient,
-  getOrmClass,
-  getOrmClasses,
   getOrmPackageCreator,
-  getPackageAddress,
   loadAccountFromPrivatekeyFile,
-  getOrmClassMetadata,
   toAddress,
 } from '../sdk';
 import { AptosAccount } from 'aptos';

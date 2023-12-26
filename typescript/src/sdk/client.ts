@@ -33,7 +33,7 @@ import {
   OrmOnchainObjectType,
   OrmClassMetadata,
 } from './types';
-import { getOrmClass, getOrmClassMetadata } from './metadata';
+import { getOrmClassMetadata } from './metadata';
 
 export class OrmClient extends AptosClient {
   // private static check(obj: unknown, name: string) {

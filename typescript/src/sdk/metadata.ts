@@ -98,8 +98,8 @@ export function OrmClass(config: OrmObjectConfig) {
     const user_fields: OrmFieldData[] = [];
     if (config?.token_config) {
       // set collection name
-      if (!config.token_config.class_name) {
-        config.token_config.class_name = target.name;
+      if (!config.token_config.collection_name) {
+        config.token_config.collection_name = target.name;
       }
       use_modules.push('aptos_token_objects::token');
       const token_fields: Set<string> = new Set(['name', 'uri', 'description']);
@@ -165,9 +165,9 @@ export function OrmClass(config: OrmObjectConfig) {
 
 export const OrmTokenClass = (option: OrmObjectConfig & Partial<OrmTokenConfig>) => {
   const token_config: OrmTokenConfig = {
-    class_name: option?.class_name || '',
-    class_uri: option?.class_uri || '',
-    class_description: option?.class_description || '',
+    collection_name: option?.collection_name || '',
+    collection_uri: option?.collection_uri || '',
+    collection_description: option?.collection_description || '',
     max_supply: option?.max_supply || 0n,
     token_use_property_map: option?.token_use_property_map || false,
     royalty_present: option?.royalty_present || false,

@@ -240,7 +240,7 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
       if (metadata.token_config) {
         address = getNamedObjectAddress(
           metadata.package_address,
-          [metadata.token_config.class_name, ...index_fields]
+          [metadata.token_config.collection_name, ...index_fields]
         );
       } else {
         address = getNamedObjectAddress(metadata.package_address, index_fields);
