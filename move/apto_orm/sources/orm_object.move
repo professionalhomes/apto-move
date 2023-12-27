@@ -23,6 +23,7 @@ module apto_orm::orm_object {
     const EOBJECT_NOT_DELETABLE: u64 = 6;
     const ENOT_ORM_TOKEN: u64 = 7;
     const ETOKEN_NOT_MUTABLE: u64 = 8;
+    const ETOKEN_PROPERTY_NOT_MUTABLE: u64 = 9;
 
     #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     /// OrmObject for non-token objects
@@ -58,7 +59,7 @@ module apto_orm::orm_object {
     //     expiration_date: u64,
     // }
 
-    inline fun authorized_borrow<T: key>(object: &Object<T>, creator_or_owner: address): &OrmObject {
+    inline fun authorized_object_borrow<T: key>(object: &Object<T>, creator_or_owner: address): &OrmObject {
         let object_address = object::object_address(object);
         assert!(
             exists<OrmObject>(object_address),
@@ -84,7 +85,7 @@ module apto_orm::orm_object {
         orm_object
     }
 
-    inline fun authorized_mutate<T: key>(object: &Object<T>, creator_or_owner: address): &OrmToken {
+    inline fun authorized_token_borrow<T: key>(object: &Object<T>, creator_or_owner: address): &OrmToken {
         let object_address = object::object_address(object);
         assert!(
             exists<OrmObject>(object_address),
@@ -114,12 +115,7 @@ module apto_orm::orm_object {
             error::permission_denied(EOPERATION_NOT_AUTHORIZED),
         );
 
-        let orm_token = borrow_global<OrmToken>(object_address);
-        assert!(
-            option::is_some(&orm_token.mutator_ref),
-            error::permission_denied(ETOKEN_NOT_MUTABLE),
-        );
-        orm_token
+        borrow_global<OrmToken>(object_address)
     }
 
     public fun init<T: key>(
@@ -218,21 +214,25 @@ module apto_orm::orm_object {
     }
 
     public fun update<T: key>(
-        owner: &signer,
+        creator_or_owner: &signer,
         object: Object<T>,
         name: String,
         uri: String,
         description: String,
     ) acquires OrmObject, OrmToken {
-        let owner_address = signer::address_of(owner);
-        let orm_token = authorized_mutate(&object, owner_address);
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&object, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.mutator_ref),
+            error::permission_denied(ETOKEN_NOT_MUTABLE),
+        );
         token::set_name(option::borrow(&orm_token.mutator_ref), name);
         token::set_uri(option::borrow(&orm_token.mutator_ref), uri);
         token::set_description(option::borrow(&orm_token.mutator_ref), description);
     }
 
-    public fun remove<T: key>(owner: &signer, object: Object<T>) acquires OrmObject, OrmToken {
-        let owner_address = signer::address_of(owner);
+    public fun remove<T: key>(creator_or_owner: &signer, object: Object<T>) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
         let object_address = object::object_address(&object);
         assert!(
             exists<OrmObject>(object_address),
@@ -246,8 +246,8 @@ module apto_orm::orm_object {
             error::permission_denied(EOBJECT_NOT_DELETABLE),
         );
         let creator_authorized = creator_deletable &&
-            power_of_attorney::is_authorized(&creator, owner_address);
-        let owner_authorized = owner_deletable && owner_address == object::owner(object);
+            power_of_attorney::is_authorized(&creator, creator_or_owner_address);
+        let owner_authorized = owner_deletable && creator_or_owner_address == object::owner(object);
         assert!(
             creator_authorized || owner_authorized,
             error::permission_denied(EOPERATION_NOT_AUTHORIZED),
@@ -271,40 +271,52 @@ module apto_orm::orm_object {
         orm_class::emit_event(class, object_address, string::utf8(b"deleted"));
     }
 
-    public fun load_signer<T: key>(owner: &signer, object: Object<T>): signer acquires OrmObject {
-        let owner_address = signer::address_of(owner);
-        let orm_object = authorized_borrow(&object, owner_address);
+    public fun load_signer<T: key>(creator_or_owner: &signer, object: Object<T>): signer acquires OrmObject {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_object = authorized_object_borrow(&object, creator_or_owner_address);
         let ref = option::borrow(&orm_object.extend_ref);
         object::generate_signer_for_extending(ref)
     }
 
     public fun set_name<T: key>(
-        owner: &signer,
+        creator_or_owner: &signer,
         object: Object<T>,
         name: String,
     ) acquires OrmObject, OrmToken {
-        let owner_address = signer::address_of(owner);
-        let orm_token = authorized_mutate(&object, owner_address);
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&object, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.mutator_ref),
+            error::permission_denied(ETOKEN_NOT_MUTABLE),
+        );
         token::set_name(option::borrow(&orm_token.mutator_ref), name);
     }
 
     public fun set_uri<T: key>(
-        owner: &signer,
+        creator_or_owner: &signer,
         object: Object<T>,
         uri: String,
     ) acquires OrmObject, OrmToken {
-        let owner_address = signer::address_of(owner);
-        let orm_token = authorized_mutate(&object, owner_address);
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&object, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.mutator_ref),
+            error::permission_denied(ETOKEN_NOT_MUTABLE),
+        );
         token::set_uri(option::borrow(&orm_token.mutator_ref), uri);
     }
 
     public fun set_description<T: key>(
-        owner: &signer,
+        creator_or_owner: &signer,
         object: Object<T>,
         description: String,
     ) acquires OrmObject, OrmToken {
-        let owner_address = signer::address_of(owner);
-        let orm_token = authorized_mutate(&object, owner_address);
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&object, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.mutator_ref),
+            error::permission_denied(ETOKEN_NOT_MUTABLE),
+        );
         token::set_description(option::borrow(&orm_token.mutator_ref), description);
     }
 
@@ -318,6 +330,97 @@ module apto_orm::orm_object {
         let transfer_ref = object::generate_transfer_ref(ref);
         let linear_ref = object::generate_linear_transfer_ref(&transfer_ref);
         object::transfer_with_ref(linear_ref, to);
+    }
+
+    public fun init_properties(
+        ref: &ConstructorRef,
+        property_keys: vector<String>,
+        property_types: vector<String>,
+        property_values: vector<vector<u8>>,
+    ) {
+        let properties = property_map::prepare_input(property_keys, property_types, property_values);
+        property_map::init(ref, properties);
+    }
+
+    public fun add_property<T: key>(
+        creator_or_owner: &signer,
+        token: Object<T>,
+        key: String,
+        type: String,
+        value: vector<u8>,
+    ) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&token, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.property_mutator_ref),
+            error::permission_denied(ETOKEN_PROPERTY_NOT_MUTABLE),
+        );
+        let ref = option::borrow(&orm_token.property_mutator_ref);
+        property_map::add(ref, key, type, value);
+    }
+
+    public fun add_typed_property<T: key, V: drop>(
+        creator_or_owner: &signer,
+        token: Object<T>,
+        key: String,
+        value: V,
+    ) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&token, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.property_mutator_ref),
+            error::permission_denied(ETOKEN_PROPERTY_NOT_MUTABLE),
+        );
+        let ref = option::borrow(&orm_token.property_mutator_ref);
+        property_map::add_typed(ref, key, value);
+    }
+
+    public fun remove_property<T: key>(
+        creator_or_owner: &signer,
+        token: Object<T>,
+        key: String,
+    ) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&token, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.property_mutator_ref),
+            error::permission_denied(ETOKEN_PROPERTY_NOT_MUTABLE),
+        );
+        let ref = option::borrow(&orm_token.property_mutator_ref);
+        property_map::remove(ref, &key);
+    }
+
+    public fun update_property<T: key>(
+        creator_or_owner: &signer,
+        token: Object<T>,
+        key: String,
+        type: String,
+        value: vector<u8>,
+    ) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&token, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.property_mutator_ref),
+            error::permission_denied(ETOKEN_PROPERTY_NOT_MUTABLE),
+        );
+        let ref = option::borrow(&orm_token.property_mutator_ref);
+        property_map::update(ref, &key, type, value);
+    }
+
+    public fun update_typed_property<T: key, V: drop>(
+        creator_or_owner: &signer,
+        token: Object<T>,
+        key: String,
+        value: V,
+    ) acquires OrmObject, OrmToken {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let orm_token = authorized_token_borrow(&token, creator_or_owner_address);
+        assert!(
+            option::is_some(&orm_token.property_mutator_ref),
+            error::permission_denied(ETOKEN_PROPERTY_NOT_MUTABLE),
+        );
+        let ref = option::borrow(&orm_token.property_mutator_ref);
+        property_map::update_typed(ref, &key, value);
     }
 
     #[view]

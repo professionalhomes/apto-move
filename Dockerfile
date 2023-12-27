@@ -14,8 +14,15 @@ RUN apt update && apt install -y sudo wget curl python3 build-essential jq git u
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.30.8/yq_linux_amd64.tar.gz -O /tmp/yq_linux_amd64.tar.gz && \
   tar xvfz /tmp/yq_linux_amd64.tar.gz --directory /tmp && mv /tmp/yq_linux_amd64 /usr/local/bin/yq
 # RUN curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3 && mv /root/.local/bin/aptos /usr/local/bin/
-RUN wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v2.3.2/aptos-cli-2.3.2-Ubuntu-22.04-x86_64.zip \
-  -O aptos-cli-2.3.2-Ubuntu-22.04-x86_64.zip && unzip aptos-cli-2.3.2-Ubuntu-22.04-x86_64.zip && mv aptos /usr/local/bin/
+RUN wget https://github.com/aptos-labs/aptos-core/releases/download/aptos-cli-v2.3.1/aptos-cli-2.3.1-Ubuntu-22.04-x86_64.zip \
+  -O aptos-cli-2.3.1-Ubuntu-22.04-x86_64.zip && unzip aptos-cli-2.3.1-Ubuntu-22.04-x86_64.zip && mv aptos /usr/local/bin/
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
+  && export NVM_DIR="/root/.nvm" \
+  && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+  && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" \
+  && nvm install --lts \
+  && nvm alias default node \
+  && corepack enable
 COPY --from=file-server-builder /go/bin/simple-file-server /usr/local/bin/file-server
 COPY ./move /root/move
 COPY run-container.sh run.sh .key*  /root/.key/
@@ -25,13 +32,6 @@ RUN chmod +x /root/run-container.sh
 RUN chmod +x /root/run.sh
 WORKDIR /root
 RUN ./run-container.sh
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
-  && export NVM_DIR="/root/.nvm" \
-  && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
-  && [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" \
-  && nvm install --lts \
-  && nvm alias default node \
-  && corepack enable
 
 # fee_free server
 FROM node:18 AS apto_orm_api-builder
@@ -71,8 +71,7 @@ RUN touch .test-done
 FROM apto_orm-builer as aptos_orm
 COPY --from=apto_orm_api-builder /root/typescript /root/typescript
 COPY --from=apto_orm_api-builder /root/server /root/server
-EXPOSE 8080-8082 8090 9101 50051
-EXPOSE 5678
+EXPOSE 5678 8070 8080-8082 8090 9101 50051
 RUN echo 'export NVM_DIR="$HOME/.nvm"' >> /root/run-container.sh
 RUN echo ". ~/.nvm/nvm.sh" >> /root/run-container.sh
 RUN echo "export APTOS_NODE_URL=http://localhost:8080" >> /root/run-container.sh

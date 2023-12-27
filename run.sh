@@ -161,7 +161,8 @@ setup() {
    docker kill apto_orm >> /dev/null 2>&1
    docker rm -f apto_orm >> /dev/null 2>&1
    docker build -t apto_orm . && \
-   docker run -d -p 8080-8082:8080-8082 -p 9101:9101 -p 50051:50051 -p 5678:5678 --name apto_orm apto_orm && \
+   
+   docker run -d -p 8070:8070 -p 8080-8082:8080-8082 -p 9101:9101 -p 50051:50051 -p 5678:5678 --name apto_orm apto_orm && \
    sleep 3 && \
    curl http://localhost:8082/download.sh | sh
 }
