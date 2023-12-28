@@ -119,7 +119,7 @@ describe('orm_object_test', () => {
     // 5. update the objects
     a.like = 100;
     a.body = 'First board description updated';
-    txn = await client.updateTxn(package_creator, {object: a, address: a_address[0]});
+    txn = await client.updateTxn(package_creator, { object: a, address: a_address[0] });
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn);
     console.log('updateTxn', txnr.hash);
