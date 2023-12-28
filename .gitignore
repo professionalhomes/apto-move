@@ -1,12 +1,8 @@
 .aptos
 .key
-node_modules
 .env
-move/*/build
-**/move/build
-typescript/dist
+**/node_modules
+**/dist
+**/.move
+move/**/build
 build.log
-server/dist
-typescript/src/tests/.move
-server/src/.move
-./move
