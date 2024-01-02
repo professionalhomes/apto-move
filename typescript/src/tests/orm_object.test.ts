@@ -37,8 +37,8 @@ export class Board {
   }
 }
 
-describe('orm_object_test', () => {
-  test('generating, compiling and publishing orm_object_test', async () => {
+describe('AptoORM Object', () => {
+  test('Test to define, generate, compile, publish and create AptoORM Object', async () => {
     const client = new orm.OrmClient(process.env.APTOS_NODE_URL);
 
     // 1. create an package account

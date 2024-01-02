@@ -85,9 +85,9 @@ export const defineStruct = (class_data: OrmClassMetadata) => {
   const code: string[] = [];
   code.push(indent(`struct ${class_data.name} has key, copy, drop {`));
   class_data.fields.forEach((field) => {
-    if (!field.token_field) {
-      code.push(print(`${field.name}: ${field.type},`));
-    }
+    if (field.token_field) return;
+    if (field.token_property) return;
+    code.push(print(`${field.name}: ${field.type},`));
   });
   code.push(unindent(`}`));
   return code;
@@ -147,7 +147,7 @@ export const initModule = (class_data: OrmClassMetadata) => {
   return code;
 };
 
-const getcreateFunctionArgs = (fields: OrmFieldData[]) => {
+const getCreateFunctionArgs = (fields: OrmFieldData[]) => {
   const args: string[] = [];
   fields.forEach((field) => {
     if (field.writable) {
@@ -157,7 +157,7 @@ const getcreateFunctionArgs = (fields: OrmFieldData[]) => {
   return args;
 };
 
-const getupdateFunctionArgs = (fields: OrmFieldData[]) => {
+const getUpdateFunctionArgs = (fields: OrmFieldData[]) => {
   const args: string[] = [];
   fields.forEach((field) => {
     if (field.index) return;
@@ -188,14 +188,22 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
   });
   if (class_data.token_config) {
     if (class_data.index_fields.length > 0) {
-      const format = Array(class_data.index_fields.length).fill('{}').join('::');
-      const args = class_data.index_fields.join(', ');
-      const initial_token_name = `string_utils::format${class_data.index_fields.length}(&b"${format}", ${args})`;
       code.push(indent(`let ref = token::create_named_token(`));
       code.push(print(`&creator_signer,`));
       code.push(print(`string::utf8(b"${class_data.token_config.collection_name}"),`));
       code.push(print(`description,`));
-      code.push(print(`${initial_token_name},`));
+      code.push(indent(`utilities::join_str${class_data.index_fields.length}(`));
+      code.push(print(`&string::utf8(b"::"),`));
+      class_data.fields.forEach((field) => {
+        if (field.index) {
+          if (field.type === 'string::String') {
+            code.push(print(`&${field.name}`));
+          } else {
+            code.push(print(`&aptos_std::string_utils::to_string(&${field.name})`));
+          }
+        }
+      });
+      code.push(unindent(`),`));
       code.push(print(`option::none(),`));
       code.push(print(`uri,`));
       code.push(unindent(`);`));
@@ -213,18 +221,60 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
     }
   } else {
     if (class_data.index_fields.length > 0) {
+      code.push(indent(`let objname = utilities::join_str${class_data.index_fields.length}(`));
+      code.push(print(`&string::utf8(b"::"),`));
+      class_data.fields.forEach((field) => {
+        if (field.index) {
+          if (field.type === 'string::String') {
+            code.push(print(`&${field.name}`));
+          } else {
+            code.push(print(`&aptos_std::string_utils::to_string(&${field.name})`));
+          }
+        }
+      });
+      code.push(unindent(`);`));
       code.push(indent(`let ref = object::create_named_object(`));
       code.push(print(`&creator_signer,`));
-      const format = Array(class_data.index_fields.length).fill('{}').join('::');
-      const args = class_data.index_fields.join(', ');
-      const bytes = `string_utils::format${class_data.index_fields.length}(&b"${format}", ${args})`;
-      code.push(print(`*string::bytes(&${bytes}),`));
+      code.push(print(`*string::bytes(&objname),`));
       code.push(unindent(`);`));
     } else {
       code.push(print(`let creator_address = signer::address_of(&creator_signer);`));
       code.push(print(`let ref = object::create_object(creator_address);`));
     }
   }
+
+  // create token property map
+  if (class_data?.token_config?.token_use_property_map) {
+    const property_names: string[] = [];
+    const property_types: string[] = [];
+    const property_values: any[] = [];
+    class_data.fields.forEach((field) => {
+      if (!field.writable) return;
+      if (!field.token_property) return;
+      const field_type = field.type === 'string::String' ? '0x1::string::String' : field.type;
+      property_names.push(`string::utf8(b"${field.name}")`);
+      property_types.push(`string::utf8(b"${field_type}")`);
+      property_values.push(`bcs::to_bytes<${field_type}>(&${field.name})`);
+    });
+    code.push(indent(`orm_object::init_properties(&ref,`));
+    code.push(indent(`vector[`));
+    property_names.forEach((p) => {
+      code.push(print(`${p},`));
+    });
+    code.push(unindent(`],`));
+    code.push(indent(`vector[`));
+    property_types.forEach((p) => {
+      code.push(print(`${p},`));
+    });
+    code.push(unindent(`],`));
+    code.push(indent(`vector[`));
+    property_values.forEach((p) => {
+      code.push(print(`${p},`));
+    });
+    code.push(unindent(`],`));
+    code.push(unindent(`);`));
+  }
+
   code.push(print(`let object_signer = orm_object::init<${class_data.name}>(&creator_signer, &ref, orm_class);`));
   class_data.fields.forEach((field) => {
     if (field.timestamp) {
@@ -233,9 +283,9 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
   });
   const field_names: string[] = [];
   class_data.fields.forEach((field) => {
-    if (!field.token_field) {
-      field_names.push(`${field.name}: ${field.name}`);
-    }
+    if (field.token_field) return;
+    if (field.token_property) return;
+    field_names.push(`${field.name}: ${field.name}`);
   });
   code.push(indent(`move_to<${class_data.name}>(&object_signer, ${class_data.name} {`));
   if (field_names.length > 0) {
@@ -278,14 +328,31 @@ export const updateObjectFunction = (class_data: OrmClassMetadata) => {
   code.push(print(`exists<${class_data.name}>(object_address),`));
   code.push(print(`error::invalid_argument(${class_data.error_code.get('not_valid_object')}),`));
   code.push(unindent(`);`));
-  code.push(print(`orm_object::load_signer(user, object);`));
-  let user_data_borrowed = false;
+
+  let property_num = 0;
+  let borrow_num = 0;
+  class_data.user_fields.forEach((field) => {
+    if (!field.index && !field.token_field && !field.token_property)
+      borrow_num++;
+    if (field.writable && field.token_property)
+      property_num++;
+  });
+  code.push(print(`let ${property_num > 0 ? '' : '_'}object_signer = orm_object::load_signer(user, object);`));
+  class_data.user_fields.forEach((field) => {
+    if (!field.writable) return;
+    if (!field.token_property) return;
+    const field_type = field.type === 'string::String' ? '0x1::string::String' : field.type;
+    code.push(indent(`orm_object::add_typed_property<T, ${field_type}>(`));
+    code.push(print(`&object_signer, object, string::utf8(b"${field.name}"), ${field.name},`));
+    code.push(unindent(`);`));
+  });
+
+  if (borrow_num > 0)
+    code.push(print(`let user_data = borrow_global_mut<${class_data.name}>(object_address);`));
+
   class_data.user_fields.forEach((field) => {
     if (field.index) return;
-    if (!user_data_borrowed) {
-      code.push(print(`let user_data = borrow_global_mut<${class_data.name}>(object_address);`));
-      user_data_borrowed = true;
-    }
+    if (field.token_field || field.token_property) return;
     if (field.timestamp) {
       code.push(print(`user_data.${field.name} = timestamp::now_seconds();`));
     } else {
@@ -331,7 +398,7 @@ export const createFunction = (class_data: OrmClassMetadata) => {
     }
   });
   code.push(unindent_then_indent(`) {`));
-  const field_names = getcreateFunctionArgs(class_data.fields).join(', ');
+  const field_names = getCreateFunctionArgs(class_data.fields).join(', ');
   code.push(print(`create_object(user, ${field_names}, option::none());`));
   code.push(unindent(`}`));
   return code;
@@ -348,7 +415,7 @@ export const createToFunction = (class_data: OrmClassMetadata) => {
   });
   code.push(print(`to: address,`));
   code.push(unindent_then_indent(`) {`));
-  const field_names = getcreateFunctionArgs(class_data.fields).join(', ');
+  const field_names = getCreateFunctionArgs(class_data.fields).join(', ');
   code.push(print(`create_object(user, ${field_names}, option::some(to));`));
   code.push(unindent(`}`));
   return code;
@@ -373,7 +440,7 @@ export const updateFunction = (class_data: OrmClassMetadata) => {
   } else {
     code.push(unindent_then_indent(`) {`));
   }
-  const update_args = ['user', 'obj'].concat(getupdateFunctionArgs(class_data.fields));
+  const update_args = ['user', 'obj'].concat(getUpdateFunctionArgs(class_data.fields));
   code.push(print(`let obj = object::address_to_object<${class_data.name}>(object);`));
   code.push(print(`update_object(${update_args.join(', ')});`));
   code.push(unindent(`}`));
@@ -400,22 +467,44 @@ export const getFunction = (class_data: OrmClassMetadata) => {
   if (class_data.user_fields.length > 0) {
     acquires = `acquires ${class_data.name}`;
   }
-  code.push(indent(`public fun get(object: address): (${fieldtypes.join(', ')}) ${acquires} {`));
+  let o_num = 0;
+  let borrow_num = 0;
+  for (const field of class_data.fields) {
+    if (field.token_property || field.token_field) {
+      o_num++;
+    } else {
+      borrow_num++;
+    }
+  }
+
+  code.push(indent(`public fun get(object: address): (`));
+  fieldtypes.forEach((field) => {
+    code.push(print(`${field},`));
+  });
+  code.push(unindent_then_indent(`) ${acquires} {`));
+
   code.push(
-    print(`let ${class_data.token_config ? '' : '_'}o = object::address_to_object<${class_data.name}>(object);`)
+    print(`let ${o_num > 0 ? '' : '_'}o = object::address_to_object<${class_data.name}>(object);`)
   );
-  if (class_data.user_fields.length > 0) {
+  if (borrow_num > 0) {
     code.push(print(`let user_data = *borrow_global<${class_data.name}>(object);`));
   }
-  const field_names = class_data.fields.map((field) => {
+  const get_result = class_data.fields.map((field) => {
     if (field.token_field) {
       return `token::${field.name}(o)`;
+    } else if (field.token_property) {
+      const field_type = field.type === 'string::String' ? 'string' :
+        field.type === 'vector<u8>' ? 'bytes' : field.type;
+      return `property_map::read_${field_type}(&o, &string::utf8(b"${field.name}"))`;
     } else {
       return `user_data.${field.name}`;
     }
   });
-  code.push(print(`(${field_names.join(', ')})`));
-  // (token::name(o), token::uri(o), token::description(o))
+  code.push(indent(`(`));
+  get_result.forEach((r) => {
+    code.push(print(`${r},`));
+  });
+  code.push(unindent(`)`));
   code.push(unindent(`}`));
   return code;
 };

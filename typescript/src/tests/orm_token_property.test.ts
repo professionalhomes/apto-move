@@ -1,30 +1,26 @@
 import { describe, expect, test } from '@jest/globals';
-import orm, { OrmTokenClass, OrmField, OrmIndexField, snakeToCamel, debug } from '../sdk';
+import orm, { OrmTokenClass, OrmField, OrmIndexField, snakeToCamel } from '../sdk';
 import path from 'path';
 import fs from 'fs';
 
-const package_name = 'orm_token_test';
+const package_name = 'orm_token_property';
 const package_creator = orm.loadAccountFromPrivatekeyFile('../.key/user');
-const package_move_path = path.join(__dirname, '.move/orm_token_test');
+const package_move_path = path.join(__dirname, '.move/orm_token_property');
 
 @OrmTokenClass({
   package_name,
   package_creator,
-  index_fields: ['id'],
-  collection_name: 'AptoORM Membership',
+  collection_name: 'AptoORM MyHeroToken',
   collection_uri: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png',
-  collection_description: 'Membership token for AptoORM users',
+  collection_description: 'MyHeroToken token for AptoORM users',
   max_supply: 1000n,
   token_use_property_map: false,
   royalty_present: true,
   royalty_denominator: 100,
   royalty_numerator: 5,
 })
-export class Membership {
+export class MyHeroToken {
   @OrmIndexField({ immutable: true })
-  id!: number;
-
-  @OrmField({ immutable: true })
   name!: string;
 
   @OrmField({ constant: 'https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png' })
@@ -32,21 +28,30 @@ export class Membership {
 
   @OrmField({ constant: 'The description of the token' })
   description!: string;
+
+  @OrmField({ token_property: true })
+  level!: number;
+
+  @OrmField({ token_property: true })
+  grade!: 'normal' | 'rare' | 'epic' | 'legendary';
+
+  @OrmField()
+  comment!: string;
 }
 
-describe('AptoORM Token', () => {
-  test('Test to define, generate, compile, publish and create AptoORM Token', async () => {
+describe('AptoORM Token Property', () => {
+  test('Test to define, generate, compile, publish and create AptoORM Token Property', async () => {
     const client = new orm.OrmClient(process.env.APTOS_NODE_URL);
     const package_config: orm.OrmPackageConfig = {
       package_creator: package_creator,
       package_name,
       package_move_path,
-      ormobjs: [Membership],
+      ormobjs: [MyHeroToken],
       local_apto_orm_package: path.join(__dirname, '../../../move/apto_orm'),
     };
 
     orm.generatePackage(package_config);
-    expect(fs.existsSync(`${package_move_path}/sources/membership.move`)).toBe(true);
+    expect(fs.existsSync(`${package_move_path}/sources/my_hero_token.move`)).toBe(true);
     orm.compilePackage(package_config);
     expect(fs.existsSync(`${package_move_path}/build/${snakeToCamel(package_name, true)}/package-metadata.bcs`)).toBe(
       true
@@ -62,25 +67,27 @@ describe('AptoORM Token', () => {
       console.log('publishPackageTxns', txnr.hash);
     }
 
-    const membership: Membership = new Membership();
-    membership.id = Math.floor(Math.random() * 1000000);
-    membership.name = 'ORM Silver Membership';
-    membership.uri = 'https://example.com/membership/silver';
-    membership.description = 'ORM Silver Membership';
-    let txn = await client.createTxn(package_creator, membership);
+    const my_hero_token: MyHeroToken = new MyHeroToken();
+    my_hero_token.name = `MyHeroToken ${Math.floor(Math.random() * 1000000)}`;
+    my_hero_token.uri = 'https://example.com/my_hero_token/silver';
+    my_hero_token.description = 'ORM Silver MyHeroToken';
+    my_hero_token.level = 100;
+    my_hero_token.grade = 'epic';
+    my_hero_token.comment = 'This is a comment';
+    let txn = await client.createTxn(package_creator, my_hero_token);
     let ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     let txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log('createTxn', txnr.hash);
-    const membership_address = client.retrieveObjectFromTxnr(txnr, { object_type: 'Membership' });
+    const myhero = client.retrieveObjectFromTxnr(txnr, { object_type: 'MyHeroToken' });
 
-    console.log('membership_address', membership_address);
+    console.log('myhero', myhero);
 
-    txn = await client.deleteTxn(package_creator, membership);
+    txn = await client.deleteTxn(package_creator, my_hero_token);
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
 
     expect(client.retrieveObjectFromTxnr(txnr, { event_type: 'deleted' })).toBe(
-      membership_address
+      myhero
     );
     console.log('deleteTxn', txnr.hash);
   });

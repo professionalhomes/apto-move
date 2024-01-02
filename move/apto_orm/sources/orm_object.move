@@ -257,9 +257,13 @@ module apto_orm::orm_object {
             let OrmToken {
                 burn_ref,
                 mutator_ref: _,
-                property_mutator_ref: _,
+                property_mutator_ref,
                 royalty_mutator_ref: _,
             } = orm_token;
+            if (option::is_some(&property_mutator_ref)) {
+                let ref = option::extract(&mut property_mutator_ref);
+                property_map::burn(ref);
+            };
             if (option::is_some(&burn_ref)) {
                 let ref = option::extract(&mut burn_ref);
                 token::burn(ref);

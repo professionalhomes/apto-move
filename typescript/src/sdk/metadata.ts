@@ -11,12 +11,12 @@ import {
   OrmObjectLiteral,
 } from './types';
 import { camelToSnake, loadAddresses, toAddress } from './utilities';
-import path from 'path';
 
 const ormObjectKey = Symbol('orm:object');
 const ormObjectFieldsKey = Symbol('orm:object:fields');
 const ormClasses = new Map<string, OrmObjectLiteral>();
 const ormPackageCreators = new Map<string, MaybeHexString>();
+const aptosTokenFields: Set<string> = new Set(['name', 'uri', 'description']);
 
 export function getOrmClass(class_name: string) {
   return ormClasses.get(class_name);
@@ -66,6 +66,7 @@ export function OrmClass(config: OrmObjectConfig) {
       'apto_orm::orm_module',
       'std::option::{Self, Option}',
     ];
+    let token_use_property_map = false;
     const index_fields = config?.index_fields || [];
     fields.forEach((field) => {
       if (field.index) {
@@ -82,6 +83,18 @@ export function OrmClass(config: OrmObjectConfig) {
           use_modules.push('std::string');
           break;
       }
+      if (field.token_property) {
+        if (!use_modules.includes('std::bcs')) {
+          use_modules.push('std::bcs');
+        }
+        if (!use_modules.includes('aptos_token_objects::property_map')) {
+          use_modules.push('aptos_token_objects::property_map');
+        }
+        token_use_property_map = true;
+        if (!config.token_config) {
+          throw new Error(`OrmTokenClass must be declared for token_property [${field.name}]`);
+        }
+      }
     });
     if (index_fields.length > 3) {
       throw new Error('index_fields must be less than 3');
@@ -93,16 +106,17 @@ export function OrmClass(config: OrmObjectConfig) {
       }
     }
     if (index_fields.length > 0) {
-      use_modules.push('aptos_std::string_utils');
+      use_modules.push('apto_orm::utilities');
     }
     const user_fields: OrmFieldData[] = [];
     if (config?.token_config) {
+      config.token_config.token_use_property_map = token_use_property_map;
       // set collection name
       if (!config.token_config.collection_name) {
         config.token_config.collection_name = target.name;
       }
       use_modules.push('aptos_token_objects::token');
-      const token_fields: Set<string> = new Set(['name', 'uri', 'description']);
+      const token_fields: Set<string> = new Set(aptosTokenFields);
       fields.forEach((field) => {
         const removed = token_fields.delete(field.name);
         if (removed) {
@@ -114,13 +128,12 @@ export function OrmClass(config: OrmObjectConfig) {
       if (token_fields.size > 0) {
         throw new Error(`OrmTokenClass object must have [${Array.from(token_fields).join(', ')}] fields`);
       }
-      const token_config = config?.token_config;
-      if (token_config.royalty_present) {
-        if (!token_config.royalty_payee) {
+      if (config.token_config.royalty_present) {
+        if (!config.token_config.royalty_payee) {
           // This is not required because the royalty can be set by the collection owner.
-          // throw new Error('token_config.royalty_payee must be set');
+          // throw new Error('config.token_config.royalty_payee must be set');
         }
-        if (!token_config?.royalty_denominator || token_config.royalty_denominator <= 0) {
+        if (!config.token_config?.royalty_denominator || config.token_config.royalty_denominator <= 0) {
           throw new Error('token_config.royalty_denominator must be greater than 0');
         }
       }
@@ -204,11 +217,10 @@ export function OrmField(config?: OrmFieldConfig): PropertyDecorator {
       })(),
       immutable: config.immutable || false,
       constant: config.constant,
-      token_field: false,
       index: config.index || false,
+      token_property: config.token_property || false,
+      timestamp: config.timestamp || false,
     };
-    // console.log(field);
-    if (config.timestamp) field.timestamp = true;
     const fields: OrmFieldData[] = Reflect.getOwnMetadata(ormObjectFieldsKey, target) || [];
     if (!fields.includes(field)) {
       fields.push(field);
@@ -236,21 +248,6 @@ export const OrmIndexField = (config?: OrmFieldConfig) => {
   return OrmField(config);
 };
 
-// export class BaseOrmClass {
-//   get metadata(): OrmClassMetadata {
-//     return getOrmClassMetadata(this.constructor);
-//   }
-//   fields() {
-//     let fields: OrmFieldData[] = [];
-//     let target = Object.getPrototypeOf(this);
-//     while (target != Object.prototype) {
-//       let childFields: OrmFieldData[] = Reflect.getOwnMetadata(ormObjectFieldsKey, target) || [];
-//       fields.push(...childFields);
-//       target = Object.getPrototypeOf(target);
-//     }
-//     return fields;
-//   }
-// }
 
 function toMoveType(typeName: string, typeHelp?: string) {
   if (typeHelp) {

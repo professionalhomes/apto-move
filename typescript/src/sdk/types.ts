@@ -33,7 +33,10 @@ export interface OrmFieldConfig {
   immutable?: boolean;
   /** The constant value is set to the field. */
   constant?: string;
-  // enum?: Object;
+  /** whether the field is a major field of Aptos Token object. */
+  token_field?: boolean;
+  /** The field is a Aptos Token property */
+  token_property?: boolean;
 }
 
 export interface OrmFieldData extends OrmFieldConfig {
@@ -49,8 +52,6 @@ export interface OrmFieldData extends OrmFieldConfig {
   writable: boolean;
   /** whether the field can be updated by the user. update is not supported. */
   immutable: boolean;
-  /** whether the field is the field of Aptos Token object. */
-  token_field: boolean;
 }
 
 /** ORM Token configuration */
@@ -74,13 +75,6 @@ export type OrmTokenConfig = {
   /** The numerator of the royalty */
   royalty_numerator: number;
 };
-
-export enum OrmObjectMinter {
-  Creater = 1,
-  Anonymous = 2,
-  Challenger = 3,
-  WhiteList = 4,
-}
 
 export type OrmObjectConfig = {
   /** The creator address of the object and package */
@@ -111,8 +105,6 @@ export type OrmObjectConfig = {
   named_addresses?: NamedAddresses;
   /** The token configuration must be set if the OrmObject is Aptos Token object. */
   token_config?: OrmTokenConfig;
-  /** The minter of the object */
-  minters?: OrmObjectMinter[];
 };
 
 export interface OrmClassMetadata extends OrmObjectConfig {
