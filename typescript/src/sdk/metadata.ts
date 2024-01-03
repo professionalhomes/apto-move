@@ -76,11 +76,14 @@ export function OrmClass(config: OrmObjectConfig) {
       }
       switch (field.property_type) {
         case 'Date':
-          use_modules.push('aptos_framework::timestamp');
+          if (!use_modules.includes('aptos_framework::timestamp')) {
+            use_modules.push('aptos_framework::timestamp');
+          }
           break;
         case 'String':
-          if (use_modules.includes('std::string')) break;
-          use_modules.push('std::string');
+          if (!use_modules.includes('std::string')) {
+            use_modules.push('std::string');
+          }
           break;
       }
       if (field.token_property) {
@@ -93,6 +96,11 @@ export function OrmClass(config: OrmObjectConfig) {
         token_use_property_map = true;
         if (!config.token_config) {
           throw new Error(`OrmTokenClass must be declared for token_property [${field.name}]`);
+        }
+      }
+      if (field.timestamp) {
+        if (!use_modules.includes('aptos_framework::timestamp')) {
+          use_modules.push('aptos_framework::timestamp');
         }
       }
     });

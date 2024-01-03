@@ -197,9 +197,9 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
       class_data.fields.forEach((field) => {
         if (field.index) {
           if (field.type === 'string::String') {
-            code.push(print(`&${field.name}`));
+            code.push(print(`&${field.name},`));
           } else {
-            code.push(print(`&aptos_std::string_utils::to_string(&${field.name})`));
+            code.push(print(`&aptos_std::string_utils::to_string(&${field.name}),`));
           }
         }
       });
@@ -226,9 +226,9 @@ export const createObjectFunction = (package_name: string, class_data: OrmClassM
       class_data.fields.forEach((field) => {
         if (field.index) {
           if (field.type === 'string::String') {
-            code.push(print(`&${field.name}`));
+            code.push(print(`&${field.name},`));
           } else {
-            code.push(print(`&aptos_std::string_utils::to_string(&${field.name})`));
+            code.push(print(`&aptos_std::string_utils::to_string(&${field.name}),`));
           }
         }
       });
