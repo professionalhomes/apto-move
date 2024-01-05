@@ -19,6 +19,7 @@ import {
   areUint8ArraysEqual,
   getNamedObjectAddress,
   loadOrmClassMetadata,
+  toPrimitiveType,
 } from './utilities';
 import {
   OrmTxn,
@@ -487,6 +488,37 @@ export class OrmClient extends AptosClient {
       },
       options
     );
+  }
+
+  async getObject<OrmObject extends OrmObjectLiteral>(
+    obj: OrmObjectTarget<OrmObject>,
+    raise_error: boolean = true
+  ) {
+    try {
+      const { address, metadata } = loadOrmClassMetadata(obj, true);
+      const fields = metadata.fields;
+      if (!metadata.package_address || !metadata.module_name) {
+        throw new Error(`package address is not defined`);
+      }
+      const rvalues = await this.view(
+        {
+          function: `${metadata.package_address}::${metadata.module_name}::get`,
+          type_arguments: [],
+          arguments: [address.toString()],
+        }
+      );
+      const dataobj = Object.create((metadata.class as any).prototype);
+      rvalues.forEach((r, i) => {
+        const field = fields[i];
+        dataobj[field.property_key as keyof OrmObjectLiteral] = toPrimitiveType(r, field);
+      });
+      return dataobj;
+    } catch (e) {
+      if (raise_error) {
+        throw e;
+      }
+      return undefined;
+    }
   }
 
   retrieveObjectFromTxnr<OrmObject extends OrmObjectLiteral>(

@@ -108,6 +108,7 @@ export type OrmObjectConfig = {
 };
 
 export interface OrmClassMetadata extends OrmObjectConfig {
+  class: OrmObjectLiteral;
   package_address: MaybeHexString; // address of the package
   name: string; // name of the object
   module_name: string; // name of the module

@@ -2,11 +2,11 @@ import path from 'path';
 import fs from 'fs';
 import util from 'util';
 import { AptosAccount, HexString, MaybeHexString, TxnBuilderTypes, BCS } from 'aptos';
-import { OrmObjectConfig, NamedAddresses, HexEncodedBytes, OrmObjectLiteral, OrmObjectTarget, OrmObjectType, OrmOnchainObjectType, OrmClassMetadata } from './types';
+import { OrmObjectConfig, NamedAddresses, HexEncodedBytes, OrmObjectLiteral, OrmObjectTarget, OrmObjectType, OrmOnchainObjectType, OrmClassMetadata, OrmFieldData } from './types';
 import { sha3_256 as sha3Hash } from '@noble/hashes/sha3';
 import toml from 'toml';
 import { getPackageAddress } from './packages';
-import { getOrmClassMetadata } from './metadata';
+import { getOrmClassFieldMetadata, getOrmClassMetadata } from './metadata';
 
 export const camelToSnake = (str: string) =>
   str[0].toLowerCase() + str.slice(1, str.length).replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
@@ -234,8 +234,12 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
       if (metadata.index_fields.length <= 0) {
         throw new Error(`unable to specify object address because it has no index fields`);
       }
-      const index_fields = metadata.index_fields.map((field) => {
-        return (target as any)[field];
+      const index_fields = metadata.index_fields.map((field_name) => {
+        const field = getOrmClassFieldMetadata(metadata.name, field_name);
+        if (field?.constant) {
+          return field.constant;
+        }
+        return (target as any)[field_name];
       });
       if (metadata.token_config) {
         address = getNamedObjectAddress(
@@ -252,4 +256,17 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
     address,
     metadata,
   };
+}
+
+export function toPrimitiveType(value: any, t: OrmFieldData) {
+  if (t.property_type === 'Number') {
+    return Number(value);
+  } else if (t.property_type === 'BigInt') {
+    return BigInt(value);
+  } else if (t.property_type === 'Boolean') {
+    return !!value;
+  } else if (t.property_type === 'String') {
+    return String(value);
+  }
+  return value;
 }

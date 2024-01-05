@@ -82,6 +82,9 @@ describe('AptoORM Token Property', () => {
 
     console.log('myhero', myhero);
 
+    const myhero2 = await client.getObject(my_hero_token, true);
+    console.log('myhero2', myhero2);
+
     txn = await client.deleteTxn(package_creator, my_hero_token);
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });

@@ -151,6 +151,7 @@ export function OrmClass(config: OrmObjectConfig) {
     use_modules.sort();
     const resource: OrmClassMetadata = {
       ...config,
+      class: target,
       package_address: named_addresses[config.package_name],
       name: target.name,
       module_name,
@@ -237,12 +238,15 @@ export function OrmField(config?: OrmFieldConfig): PropertyDecorator {
     Reflect.defineMetadata(ormObjectKey, field, target, key);
     // let writable = true;
     // if (field.timestamp) writable = false;
-    // return {
-    //   enumerable: true,
-    //   configurable: true,
-    //   writable: true,
-    //   writable,
-    // };
+    // if (config.constant) {
+    //   return {
+    //     enumerable: true,
+    //     configurable: true,
+    //     writable: true,
+    //     get: () => config.constant,
+    //     set: (_: any) => {},
+    //   };
+    // }
   };
 }
 
@@ -255,7 +259,6 @@ export const OrmIndexField = (config?: OrmFieldConfig) => {
   config.index = true;
   return OrmField(config);
 };
-
 
 function toMoveType(typeName: string, typeHelp?: string) {
   if (typeHelp) {
@@ -316,6 +319,17 @@ export function getOrmClassMetadata(ormobj: OrmObjectLiteral | Function | string
   // const fields = Reflect.getOwnMetadata(ormObjectFieldsKey, userObject);
   if (!meta) throw new Error('OrmClass metadata not found in user class');
   return meta;
+}
+
+export function getOrmClassFieldMetadata(ormobj: OrmObjectLiteral | Function | string, field_name: string) {
+  if (typeof ormobj === 'string') {
+    ormobj = ormClasses.get(ormobj);
+  } else if (typeof ormobj === 'object') {
+    ormobj = ormobj.constructor;
+  }
+  if (!ormobj) throw new Error('OrmClass is undefined');
+  const data: OrmFieldData = Reflect.getMetadata(ormObjectKey, ormobj.prototype, field_name);
+  return data;
 }
 
 export function loadNamedAddresses(ormobj: OrmObjectLiteral) {
