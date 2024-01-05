@@ -270,3 +270,20 @@ export function toPrimitiveType(value: any, t: OrmFieldData) {
   }
   return value;
 }
+
+const ormAddressKey = Symbol.for('orm:address')
+export function setOrmObjectAddress(ormobj: OrmObjectLiteral, address: MaybeHexString) {
+  if (!ormobj) return;
+  const o = ormobj as any;
+  Object.defineProperty(o, ormAddressKey, {
+    value: toAddress(address).toShortString(),
+    configurable: true,
+    enumerable: false,
+    writable: true,
+  });
+  // console.log(`set address: ${o[ormAddressKey]}`);
+}
+
+export function getOrmObjectAddress(ormobj: OrmObjectLiteral) {
+  return (ormobj as any)[ormAddressKey];
+}

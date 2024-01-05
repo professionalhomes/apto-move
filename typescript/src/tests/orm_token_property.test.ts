@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import orm, { OrmTokenClass, OrmField, OrmIndexField, snakeToCamel } from '../sdk';
+import orm, { OrmTokenClass, OrmField, OrmIndexField, snakeToCamel, getOrmObjectAddress } from '../sdk';
 import path from 'path';
 import fs from 'fs';
 
@@ -78,19 +78,20 @@ describe('AptoORM Token Property', () => {
     let ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     let txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log('createTxn', txnr.hash);
-    const myhero = client.retrieveObjectFromTxnr(txnr, { object_type: 'MyHeroToken' });
+    const address = client.retrieveObjectFromTxnr(txnr, { object_type: 'MyHeroToken' });
 
+    console.log('myhero address', address);
+
+    const myhero = await client.getObject(my_hero_token, true);
     console.log('myhero', myhero);
-
-    const myhero2 = await client.getObject(my_hero_token, true);
-    console.log('myhero2', myhero2);
+    console.log('myhero', getOrmObjectAddress(myhero));
 
     txn = await client.deleteTxn(package_creator, my_hero_token);
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
 
     expect(client.retrieveObjectFromTxnr(txnr, { event_type: 'deleted' })).toBe(
-      myhero
+      address
     );
     console.log('deleteTxn', txnr.hash);
   });

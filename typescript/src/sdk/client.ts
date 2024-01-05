@@ -19,7 +19,9 @@ import {
   areUint8ArraysEqual,
   getNamedObjectAddress,
   loadOrmClassMetadata,
+  setOrmObjectAddress,
   toPrimitiveType,
+  getOrmObjectAddress,
 } from './utilities';
 import {
   OrmTxn,
@@ -504,7 +506,7 @@ export class OrmClient extends AptosClient {
         {
           function: `${metadata.package_address}::${metadata.module_name}::get`,
           type_arguments: [],
-          arguments: [address.toString()],
+          arguments: [address.toShortString()],
         }
       );
       const dataobj = Object.create((metadata.class as any).prototype);
@@ -512,7 +514,27 @@ export class OrmClient extends AptosClient {
         const field = fields[i];
         dataobj[field.property_key as keyof OrmObjectLiteral] = toPrimitiveType(r, field);
       });
+      setOrmObjectAddress(dataobj, address);
       return dataobj;
+    } catch (e) {
+      if (raise_error) {
+        throw e;
+      }
+      return undefined;
+    }
+  }
+
+  getAddress<OrmObject extends OrmObjectLiteral>(
+    obj: OrmObjectTarget<OrmObject>,
+    raise_error: boolean = true
+  ) {
+    try {
+      const addr = getOrmObjectAddress(obj);
+      if (!addr) {
+        const { address } = loadOrmClassMetadata(obj, true);
+        return address;
+      }
+      return addr;
     } catch (e) {
       if (raise_error) {
         throw e;
@@ -529,6 +551,19 @@ export class OrmClient extends AptosClient {
       change_type?: 'write_resource' | 'delete_resource';
     }
   ) {
+    if (filter?.event_type) {
+      if (txnr?.events) {
+        for (const event of txnr.events) {
+          if (event?.type === this.ormEventType) {
+            if (event?.data?.event_type === filter.event_type) {
+              if (event?.data?.object) {
+                return event.data.object as string;
+              }
+            }
+          }
+        }
+      }
+    }
     let metadata: OrmClassMetadata;
     let search_resource: string;
     const change_type = filter?.change_type;
@@ -536,19 +571,6 @@ export class OrmClient extends AptosClient {
     if (filter?.object_type) {
       metadata = getOrmClassMetadata(filter.object_type);
       search_resource = `${metadata.package_address}::${metadata.module_name}::${metadata.name}`;
-    }
-    if (filter?.event_type) {
-      if (txnr?.events) {
-        for (const event of txnr.events) {
-          if (event?.type === this.ormEventType) {
-            if (event?.data?.event_type === filter.event_type) {
-              if (event?.data?.object) {
-                return event.data.object;
-              }
-            }
-          }
-        }
-      }
     }
     // [FIXME] delete_resource is not working due to no data in the change.
     if (txnr?.changes) {
