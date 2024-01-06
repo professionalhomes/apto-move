@@ -147,9 +147,9 @@ export interface Signable {
 export type OrmTxn = {
   type: 'raw' | 'multi-agent' | 'fee-payer';
   txn:
-  | TxnBuilderTypes.RawTransaction
-  | TxnBuilderTypes.MultiAgentRawTransaction
-  | TxnBuilderTypes.FeePayerRawTransaction;
+    | TxnBuilderTypes.RawTransaction
+    | TxnBuilderTypes.MultiAgentRawTransaction
+    | TxnBuilderTypes.FeePayerRawTransaction;
   auths: (TxnBuilderTypes.AccountAuthenticatorEd25519 | null)[];
   payer_auth?: TxnBuilderTypes.AccountAuthenticatorEd25519 | null;
 };
@@ -180,7 +180,7 @@ export type OrmPackageConfig = {
  * Interface of the simple literal object with any string keys.
  */
 export interface OrmObjectLiteral {
-  [key: string]: any
+  [key: string]: any;
 }
 export const object_addr = Symbol.for('orm:object:address');
 export interface OrmObjectAddressable extends OrmObjectLiteral {
@@ -190,7 +190,7 @@ export interface OrmObjectAddressable extends OrmObjectLiteral {
 /**
  * Represents some Type of the Object.
  */
-export type OrmObjectType<T> = { new(): T } | Function
+export type OrmObjectType<T> = { new (): T } | Function;
 
 /**
  * OrmObject target.
@@ -200,6 +200,6 @@ export type OrmObjectTarget<T> =
   | OrmObjectLiteral
   | OrmObjectAddressable
   | {
-    address: MaybeHexString;
-    object: OrmObjectType<T> | OrmObjectLiteral | string;
-  }
+      address: MaybeHexString;
+      object: OrmObjectType<T> | OrmObjectLiteral | string;
+    };

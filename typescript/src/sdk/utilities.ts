@@ -2,7 +2,18 @@ import path from 'path';
 import fs from 'fs';
 import util from 'util';
 import { AptosAccount, HexString, MaybeHexString, TxnBuilderTypes, BCS } from 'aptos';
-import { OrmObjectConfig, NamedAddresses, HexEncodedBytes, OrmObjectLiteral, OrmObjectTarget, OrmObjectType, OrmClassMetadata, OrmFieldData, object_addr, OrmObjectAddressable } from './types';
+import {
+  OrmObjectConfig,
+  NamedAddresses,
+  HexEncodedBytes,
+  OrmObjectLiteral,
+  OrmObjectTarget,
+  OrmObjectType,
+  OrmClassMetadata,
+  OrmFieldData,
+  object_addr,
+  OrmObjectAddressable,
+} from './types';
 import { sha3_256 as sha3Hash } from '@noble/hashes/sha3';
 import toml from 'toml';
 import { getPackageAddress } from './packages';
@@ -160,12 +171,16 @@ export function deserializeArgument(arg: any): any {
 }
 
 export function stringifyJson(obj: any, space: string | number = 0) {
-  return JSON.stringify(obj, function (key, value) {
-    if (value instanceof Uint8Array) {
-      return 'vector<u8>::' + uint8ArrayToHexEncodedBytes(value);
-    }
-    return value;
-  }, space);
+  return JSON.stringify(
+    obj,
+    function (key, value) {
+      if (value instanceof Uint8Array) {
+        return 'vector<u8>::' + uint8ArrayToHexEncodedBytes(value);
+      }
+      return value;
+    },
+    space
+  );
 }
 
 export function parseJson(str: string) {
@@ -206,7 +221,7 @@ export function getNamedObjectAddress(creator: AptosAccount | MaybeHexString, na
 
 export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
   target: OrmObjectTarget<OrmObject>,
-  acquire_address: boolean = false,
+  acquire_address: boolean = false
 ) {
   let object: OrmObjectLiteral | OrmObjectAddressable;
   let address: HexString;
@@ -218,8 +233,7 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
     const any_target = target as any;
     if (any_target.address && any_target.object) {
       metadata = getOrmClassMetadata(any_target.object);
-      if (acquire_address)
-        address = toAddress(any_target.address);
+      if (acquire_address) address = toAddress(any_target.address);
       if (typeof any_target.object === 'object') {
         object = any_target.object;
       }
@@ -242,10 +256,10 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
         return (target as any)[field_name];
       });
       if (metadata.token_config) {
-        address = getNamedObjectAddress(
-          metadata.package_address,
-          [metadata.token_config.collection_name, ...index_fields]
-        );
+        address = getNamedObjectAddress(metadata.package_address, [
+          metadata.token_config.collection_name,
+          ...index_fields,
+        ]);
       } else {
         address = getNamedObjectAddress(metadata.package_address, index_fields);
       }

@@ -1,5 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
-import orm, { OrmTokenClass, OrmField, OrmIndexField, snakeToCamel, getOrmObjectAddress, object_addr } from '../sdk';
+import orm, {
+  OrmTokenClass,
+  OrmField,
+  OrmIndexField,
+  snakeToCamel,
+  getOrmObjectAddress,
+  object_addr,
+  OrmObjectAddressable,
+} from '../sdk';
 import path from 'path';
 import fs from 'fs';
 
@@ -82,7 +90,7 @@ describe('AptoORM Token Property', () => {
 
     console.log('myhero address', address);
 
-    const myhero = await client.getObject(my_hero_token, true);
+    const myhero = await client.getObject<MyHeroToken>(my_hero_token, true);
     console.log('myhero address', myhero[object_addr]);
     console.log('myhero', getOrmObjectAddress(myhero));
 
@@ -90,9 +98,7 @@ describe('AptoORM Token Property', () => {
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
 
-    expect(client.retrieveOrmObjectAddressFromTxnr(txnr, { event_type: 'deleted' })).toBe(
-      address
-    );
+    expect(client.retrieveOrmObjectAddressFromTxnr(txnr, { event_type: 'deleted' })).toBe(address);
     console.log('deleteTxn', txnr.hash);
   });
 });

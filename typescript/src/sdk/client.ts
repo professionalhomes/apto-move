@@ -515,7 +515,7 @@ export class OrmClient extends AptosClient {
         dataobj[field.property_key as keyof OrmObjectLiteral] = toPrimitiveType(r, field);
       });
       setOrmObjectAddress(dataobj, address);
-      return dataobj as OrmObjectAddressable;
+      return dataobj as OrmObject & OrmObjectAddressable;
     } catch (e) {
       if (raise_error) {
         throw e;
