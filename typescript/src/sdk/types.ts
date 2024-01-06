@@ -182,16 +182,15 @@ export type OrmPackageConfig = {
 export interface OrmObjectLiteral {
   [key: string]: any
 }
+export const object_addr = Symbol.for('orm:object:address');
+export interface OrmObjectAddressable extends OrmObjectLiteral {
+  [object_addr]: MaybeHexString;
+}
 
 /**
  * Represents some Type of the Object.
  */
 export type OrmObjectType<T> = { new(): T } | Function
-
-export type OrmOnchainObjectType<T> = {
-  address: MaybeHexString;
-  object: OrmObjectType<T> | OrmObjectLiteral | string;
-}
 
 /**
  * OrmObject target.
@@ -199,4 +198,8 @@ export type OrmOnchainObjectType<T> = {
 export type OrmObjectTarget<T> =
   | OrmObjectType<T>
   | OrmObjectLiteral
-  | OrmOnchainObjectType<T>;
+  | OrmObjectAddressable
+  | {
+    address: MaybeHexString;
+    object: OrmObjectType<T> | OrmObjectLiteral | string;
+  }

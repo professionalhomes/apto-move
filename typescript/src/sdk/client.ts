@@ -33,8 +33,8 @@ import {
   OrmObjectLiteral,
   OrmObjectTarget,
   OrmObjectType,
-  OrmOnchainObjectType,
   OrmClassMetadata,
+  OrmObjectAddressable,
 } from './types';
 import { getOrmClassMetadata } from './metadata';
 
@@ -515,7 +515,7 @@ export class OrmClient extends AptosClient {
         dataobj[field.property_key as keyof OrmObjectLiteral] = toPrimitiveType(r, field);
       });
       setOrmObjectAddress(dataobj, address);
-      return dataobj;
+      return dataobj as OrmObjectAddressable;
     } catch (e) {
       if (raise_error) {
         throw e;
@@ -534,7 +534,7 @@ export class OrmClient extends AptosClient {
         const { address } = loadOrmClassMetadata(obj, true);
         return address;
       }
-      return addr;
+      return addr as string;
     } catch (e) {
       if (raise_error) {
         throw e;
@@ -543,7 +543,7 @@ export class OrmClient extends AptosClient {
     }
   }
 
-  retrieveObjectFromTxnr<OrmObject extends OrmObjectLiteral>(
+  retrieveOrmObjectAddressesFromTxnr<OrmObject extends OrmObjectLiteral>(
     txnr: any,
     filter?: {
       event_type?: 'created' | 'deleted';
@@ -551,23 +551,24 @@ export class OrmClient extends AptosClient {
       change_type?: 'write_resource' | 'delete_resource';
     }
   ) {
+    const addresses: string[] = [];
     if (filter?.event_type) {
       if (txnr?.events) {
         for (const event of txnr.events) {
           if (event?.type === this.ormEventType) {
             if (event?.data?.event_type === filter.event_type) {
               if (event?.data?.object) {
-                return event.data.object as string;
+                addresses.push(event.data.object as string);
               }
             }
           }
         }
       }
+      return [...new Set(addresses)];
     }
     let metadata: OrmClassMetadata;
     let search_resource: string;
     const change_type = filter?.change_type;
-    let changed: string;
     if (filter?.object_type) {
       metadata = getOrmClassMetadata(filter.object_type);
       search_resource = `${metadata.package_address}::${metadata.module_name}::${metadata.name}`;
@@ -576,21 +577,36 @@ export class OrmClient extends AptosClient {
     if (txnr?.changes) {
       for (const change of txnr.changes) {
         if (!change?.data || !change?.type) continue;
-        if (change_type && change.type !== change_type) {
-          continue;
-        }
+        if (change_type && change.type !== change_type) continue;
         const resource_type = change.data?.type as string;
+        let changed: string = undefined;
         if (search_resource && resource_type === search_resource) {
           if (change?.data?.object) {
             changed = change.data.object;
-            break;
           }
         } else if (resource_type == this._ORM_OBJECT_TYPE) {
           changed = change.address;
-          break;
+        }
+        if (changed) {
+          addresses.push(changed);
         }
       }
     }
-    return changed;
+    return [...new Set(addresses)];
+  }
+
+  retrieveOrmObjectAddressFromTxnr<OrmObject extends OrmObjectLiteral>(
+    txnr: any,
+    filter?: {
+      event_type?: 'created' | 'deleted';
+      object_type?: OrmObjectType<OrmObject> | OrmObjectLiteral | string;
+      change_type?: 'write_resource' | 'delete_resource';
+    }
+  ) {
+    const addresses = this.retrieveOrmObjectAddressesFromTxnr(txnr, filter);
+    if (addresses.length > 1) {
+      throw new Error(`multiple addresses found`);
+    }
+    return addresses[0];
   }
 }

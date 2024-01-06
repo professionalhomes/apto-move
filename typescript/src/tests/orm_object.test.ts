@@ -98,23 +98,23 @@ describe('AptoORM Object', () => {
     txn = await client.createTxn(package_creator, a);
     let ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
-    const a_address = client.retrieveObjectFromTxnr(txnr);
+    const a_address = client.retrieveOrmObjectAddressFromTxnr(txnr);
     console.log('createTxn', txnr.hash);
-    console.log('retrieveObjectFromTxnr', a_address);
+    console.log('retrieveOrmObjectAddressFromTxnr', a_address);
 
     txn = await client.createTxn(package_creator, b);
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn);
-    const b_address = client.retrieveObjectFromTxnr(txnr, { object_type: Board });
+    const b_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: Board });
     console.log('createTxn', txnr.hash);
-    console.log('retrieveObjectFromTxnr', b_address);
+    console.log('retrieveOrmObjectAddressFromTxnr', b_address);
 
     txn = await client.createToTxn(package_creator, b, '0xffff');
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn);
-    const c_address = client.retrieveObjectFromTxnr(txnr, { change_type: 'write_resource' });
+    const c_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { change_type: 'write_resource' });
     console.log('createToTxn', txnr.hash);
-    console.log('retrieveObjectFromTxnr', c_address);
+    console.log('retrieveOrmObjectAddressFromTxnr', c_address);
 
     // 5. update the objects
     a.like = 100;

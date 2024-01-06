@@ -71,7 +71,7 @@ describe('AptoORM Token', () => {
     let ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     let txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log('createTxn', txnr.hash);
-    const membership_address = client.retrieveObjectFromTxnr(txnr, { object_type: 'Membership' });
+    const membership_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: 'Membership' });
 
     console.log('membership_address', membership_address);
 
@@ -79,7 +79,7 @@ describe('AptoORM Token', () => {
     ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
 
-    expect(client.retrieveObjectFromTxnr(txnr, { event_type: 'deleted' })).toBe(
+    expect(client.retrieveOrmObjectAddressFromTxnr(txnr, { event_type: 'deleted' })).toBe(
       membership_address
     );
     console.log('deleteTxn', txnr.hash);

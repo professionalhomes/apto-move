@@ -284,8 +284,8 @@ program
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(`txn: ${txnr.hash}`);
-    const objects = client.retrieveObjectFromTxnr(txnr);
-    console.log(`created objects:`, objects);
+    const address = client.retrieveOrmObjectAddressFromTxnr(txnr);
+    console.log(`created address:`, address);
   });
 
 program
@@ -325,7 +325,7 @@ program
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(`txn: ${txnr.hash}`);
-    const objects = client.retrieveObjectFromTxnr(txnr, { object_type: target_class });
+    const objects = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: target_class });
     console.log(`updated objects:`, objects);
   });
 
@@ -360,7 +360,7 @@ program
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(`txn: ${txnr.hash}`);
-    const objects = client.retrieveObjectFromTxnr(txnr, { object_type: target_class });
+    const objects = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: target_class });
     console.log(`created objects:`, objects);
   });
 

@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import util from 'util';
 import { AptosAccount, HexString, MaybeHexString, TxnBuilderTypes, BCS } from 'aptos';
-import { OrmObjectConfig, NamedAddresses, HexEncodedBytes, OrmObjectLiteral, OrmObjectTarget, OrmObjectType, OrmOnchainObjectType, OrmClassMetadata, OrmFieldData } from './types';
+import { OrmObjectConfig, NamedAddresses, HexEncodedBytes, OrmObjectLiteral, OrmObjectTarget, OrmObjectType, OrmClassMetadata, OrmFieldData, object_addr, OrmObjectAddressable } from './types';
 import { sha3_256 as sha3Hash } from '@noble/hashes/sha3';
 import toml from 'toml';
 import { getPackageAddress } from './packages';
@@ -208,20 +208,20 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
   target: OrmObjectTarget<OrmObject>,
   acquire_address: boolean = false,
 ) {
-  let object: OrmObjectLiteral;
+  let object: OrmObjectLiteral | OrmObjectAddressable;
   let address: HexString;
   let metadata: OrmClassMetadata;
   if (typeof target === 'function') {
     const orm_class = target as OrmObjectType<OrmObject>;
     metadata = getOrmClassMetadata(orm_class);
   } else {
-    if ((target as any).address && (target as any).object) {
-      const onchain_obj = target as OrmOnchainObjectType<OrmObject>;
-      metadata = getOrmClassMetadata(onchain_obj.object);
+    const any_target = target as any;
+    if (any_target.address && any_target.object) {
+      metadata = getOrmClassMetadata(any_target.object);
       if (acquire_address)
-        address = toAddress(onchain_obj.address);
-      if (typeof onchain_obj.object === 'object') {
-        object = onchain_obj.object;
+        address = toAddress(any_target.address);
+      if (typeof any_target.object === 'object') {
+        object = any_target.object;
       }
     } else {
       // typeof target === 'object'
@@ -250,6 +250,9 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
         address = getNamedObjectAddress(metadata.package_address, index_fields);
       }
     }
+    if (typeof object === 'object') {
+      object = setOrmObjectAddress(object, address);
+    }
   }
   return {
     object,
@@ -271,19 +274,23 @@ export function toPrimitiveType(value: any, t: OrmFieldData) {
   return value;
 }
 
-const ormAddressKey = Symbol.for('orm:address')
 export function setOrmObjectAddress(ormobj: OrmObjectLiteral, address: MaybeHexString) {
-  if (!ormobj) return;
+  if (typeof ormobj !== 'object') {
+    throw new Error(`ormobj must be an object`);
+  }
   const o = ormobj as any;
-  Object.defineProperty(o, ormAddressKey, {
+  Object.defineProperty(o, object_addr, {
     value: toAddress(address).toShortString(),
     configurable: true,
     enumerable: false,
     writable: true,
   });
-  // console.log(`set address: ${o[ormAddressKey]}`);
+  return o as OrmObjectAddressable;
 }
 
 export function getOrmObjectAddress(ormobj: OrmObjectLiteral) {
-  return (ormobj as any)[ormAddressKey];
+  if (typeof ormobj !== 'object') {
+    throw new Error(`ormobj must be an object`);
+  }
+  return (ormobj as any)[object_addr];
 }

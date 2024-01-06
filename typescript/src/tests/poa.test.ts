@@ -89,7 +89,7 @@ describe('Proof Of Attorney', () => {
     ptxn = await client.signAndsubmitOrmTxn([poa_account], txn);
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log('createTxn', txnr.hash);
-    let token_address = client.retrieveObjectFromTxnr(txnr, { object_type: 'PoaToken' });
+    let token_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: 'PoaToken' });
     console.log('token_address', token_address);
 
     // pause signing txns with poa account.
@@ -118,7 +118,7 @@ describe('Proof Of Attorney', () => {
     txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log('deleteTxn', ptxn.hash);
 
-    token_address = client.retrieveObjectFromTxnr(txnr, { event_type: 'deleted' });
+    token_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { event_type: 'deleted' });
     console.log('token_address', token_address);
   });
 });
