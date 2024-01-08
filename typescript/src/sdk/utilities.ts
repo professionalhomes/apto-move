@@ -223,6 +223,9 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
   target: OrmObjectTarget<OrmObject>,
   acquire_address: boolean = false
 ) {
+  if (!target) {
+    throw new Error('target is required');
+  }
   let object: OrmObjectLiteral | OrmObjectAddressable;
   let address: HexString;
   let metadata: OrmClassMetadata;
@@ -231,7 +234,7 @@ export function loadOrmClassMetadata<OrmObject extends OrmObjectLiteral>(
     metadata = getOrmClassMetadata(orm_class);
   } else {
     const any_target = target as any;
-    if (any_target.address && any_target.object) {
+    if (any_target?.address && any_target?.object) {
       metadata = getOrmClassMetadata(any_target.object);
       if (acquire_address) address = toAddress(any_target.address);
       if (typeof any_target.object === 'object') {
