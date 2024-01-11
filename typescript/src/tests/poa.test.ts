@@ -29,7 +29,7 @@ export class PoaToken {
   description!: string;
 }
 
-describe('Proof Of Attorney', () => {
+describe('Power Of Attorney', () => {
   test('Init, register and revoke PoA', async () => {
     const client = new orm.OrmClient(process.env.APTOS_NODE_URL);
 

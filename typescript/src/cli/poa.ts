@@ -62,7 +62,7 @@ poa
 
 poa
   .command('init')
-  .description('Initialize a PoA (Proof Of Attonery) into the delegator account with the PoA ticket')
+  .description('Initialize a PoA (Power Of Attonery) into the delegator account with the PoA ticket')
   .requiredOption('-l, --delegator <key_file>', 'The private key file of the delegator')
   .requiredOption('-t, --ticket <ticket_file>', 'The PoA ticket file to initialize the PoA from')
   .action(async function () {
