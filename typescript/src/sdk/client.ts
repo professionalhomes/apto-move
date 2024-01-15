@@ -358,11 +358,7 @@ export class OrmClient extends AptosClient {
     );
   }
 
-  async createTxn<OrmObject extends OrmObjectLiteral>(
-    user: AptosAccount | MaybeHexString,
-    obj: OrmObjectTarget<OrmObject>,
-    options?: OrmTxnOptions
-  ) {
+  createTxnPayload<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>) {
     const { metadata, object } = loadOrmClassMetadata(obj);
     const fields = metadata.fields;
     const args: any[] = [];
@@ -378,23 +374,22 @@ export class OrmClient extends AptosClient {
     if (!metadata.package_address) {
       throw new Error(`package address is not defined`);
     }
-    return await this.generateOrmTxn(
-      [user],
-      {
-        function: `${metadata.package_address}::${metadata.module_name}::create`,
-        type_arguments: type_args,
-        arguments: args,
-      },
-      options
-    );
+    return {
+      function: `${metadata.package_address}::${metadata.module_name}::create`,
+      type_arguments: type_args,
+      arguments: args,
+    };
   }
 
-  async createToTxn<OrmObject extends OrmObjectLiteral>(
+  async createTxn<OrmObject extends OrmObjectLiteral>(
     user: AptosAccount | MaybeHexString,
     obj: OrmObjectTarget<OrmObject>,
-    to: MaybeHexString,
     options?: OrmTxnOptions
   ) {
+    return await this.generateOrmTxn([user], this.createTxnPayload(obj), options);
+  }
+
+  createToTxnPayload<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>, to: MaybeHexString) {
     const { metadata, object } = loadOrmClassMetadata(obj);
     const fields = metadata.fields;
     const args: any[] = [];
@@ -411,22 +406,23 @@ export class OrmClient extends AptosClient {
     if (!metadata.package_address) {
       throw new Error(`package address is not defined`);
     }
-    return await this.generateOrmTxn(
-      [user],
-      {
-        function: `${metadata.package_address}::${metadata.module_name}::create_to`,
-        type_arguments: type_args,
-        arguments: args,
-      },
-      options
-    );
+    return {
+      function: `${metadata.package_address}::${metadata.module_name}::create_to`,
+      type_arguments: type_args,
+      arguments: args,
+    };
   }
 
-  async updateTxn<OrmObject extends OrmObjectLiteral>(
+  async createToTxn<OrmObject extends OrmObjectLiteral>(
     user: AptosAccount | MaybeHexString,
     obj: OrmObjectTarget<OrmObject>,
+    to: MaybeHexString,
     options?: OrmTxnOptions
   ) {
+    return await this.generateOrmTxn([user], this.createToTxnPayload(obj, to), options);
+  }
+
+  updateTxnPayload<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>) {
     const { address, metadata, object } = loadOrmClassMetadata(obj, true);
     const fields = metadata.fields;
     const args: any[] = [address];
@@ -442,15 +438,33 @@ export class OrmClient extends AptosClient {
     if (!metadata.package_address) {
       throw new Error(`package address is not defined`);
     }
-    return await this.generateOrmTxn(
-      [user],
-      {
-        function: `${metadata.package_address}::${metadata.module_name}::update`,
-        type_arguments: type_args,
-        arguments: args,
-      },
-      options
-    );
+    return {
+      function: `${metadata.package_address}::${metadata.module_name}::update`,
+      type_arguments: type_args,
+      arguments: args,
+    };
+  }
+
+  async updateTxn<OrmObject extends OrmObjectLiteral>(
+    user: AptosAccount | MaybeHexString,
+    obj: OrmObjectTarget<OrmObject>,
+    options?: OrmTxnOptions
+  ) {
+    return await this.generateOrmTxn([user], this.updateTxnPayload(obj), options);
+  }
+
+  deleteTxnPayload<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>) {
+    const { address, metadata } = loadOrmClassMetadata(obj, true);
+    const args: any[] = [address];
+    const type_args: string[] = [];
+    if (!metadata.package_address) {
+      throw new Error(`package address is not defined`);
+    }
+    return {
+      function: `${metadata.package_address}::${metadata.module_name}::delete`,
+      type_arguments: type_args,
+      arguments: args,
+    };
   }
 
   async deleteTxn<OrmObject extends OrmObjectLiteral>(
@@ -458,21 +472,7 @@ export class OrmClient extends AptosClient {
     obj: OrmObjectTarget<OrmObject>,
     options?: OrmTxnOptions
   ) {
-    const { address, metadata } = loadOrmClassMetadata(obj, true);
-    const args: any[] = [address];
-    const type_args: string[] = [];
-    if (!metadata.package_address) {
-      throw new Error(`package address is not defined`);
-    }
-    return await this.generateOrmTxn(
-      [user],
-      {
-        function: `${metadata.package_address}::${metadata.module_name}::delete`,
-        type_arguments: type_args,
-        arguments: args,
-      },
-      options
-    );
+    return await this.generateOrmTxn([user], this.deleteTxnPayload(obj), options);
   }
 
   async transferCoinsTxn(
@@ -492,23 +492,18 @@ export class OrmClient extends AptosClient {
     );
   }
 
-  async getObject<OrmObject extends OrmObjectLiteral>(
-    obj: OrmObjectTarget<OrmObject>,
-    raise_error: boolean = true
-  ) {
+  async getObject<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>, raise_error: boolean = true) {
     try {
       const { address, metadata } = loadOrmClassMetadata(obj, true);
       const fields = metadata.fields;
       if (!metadata.package_address || !metadata.module_name) {
         throw new Error(`package address is not defined`);
       }
-      const rvalues = await this.view(
-        {
-          function: `${metadata.package_address}::${metadata.module_name}::get`,
-          type_arguments: [],
-          arguments: [address.toShortString()],
-        }
-      );
+      const rvalues = await this.view({
+        function: `${metadata.package_address}::${metadata.module_name}::get`,
+        type_arguments: [],
+        arguments: [address.toShortString()],
+      });
       const dataobj = Object.create((metadata.class as any).prototype);
       rvalues.forEach((r, i) => {
         const field = fields[i];
@@ -524,10 +519,7 @@ export class OrmClient extends AptosClient {
     }
   }
 
-  getAddress<OrmObject extends OrmObjectLiteral>(
-    obj: OrmObjectTarget<OrmObject>,
-    raise_error: boolean = true
-  ) {
+  getAddress<OrmObject extends OrmObjectLiteral>(obj: OrmObjectTarget<OrmObject>, raise_error: boolean = true) {
     try {
       const addr = getOrmObjectAddress(obj);
       if (!addr) {
