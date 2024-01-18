@@ -81,6 +81,7 @@ export type OrmObjectConfig = {
   package_creator: AptosAccount | MaybeHexString;
   /** The package name where the objects belongs to */
   package_name: string;
+  package_address?: MaybeHexString; // address of the package
   /** Aptos creates named objects with predictable hash addresses, which are derived
    * from user input and the creator's address. This enables named objects to be indexed
    * and traced based on the user input provided by the creator.

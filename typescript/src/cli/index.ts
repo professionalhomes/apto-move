@@ -7,6 +7,7 @@ import orm, {
   OrmFreePostpayClient,
   OrmFreePrepayClient,
   getOrmPackageCreator,
+  getPackageAddress,
   loadAccountFromPrivatekeyFile,
   toAddress,
 } from '../sdk';
@@ -168,7 +169,10 @@ program
         fs.writeFileSync(tsconfig_path, JSON.stringify(tsconfig, null, 2));
       }
     }
-    console.log(`classes '${classes}' created at ${package_path} (${package_name})`);
+    console.log(`classes '${classlist}' are created to the package '${package_name}'`);
+    console.log(` - creator: ${package_creator}`);
+    console.log(` - address: ${getPackageAddress(package_creator, package_name)}`);
+    console.log(` - path: ${package_path}`);
   });
 
 program
@@ -193,6 +197,10 @@ program
       ormobjs: ormclasses,
     };
     orm.generatePackage(package_config);
+    console.log(`package '${package_name}' generated`);
+    console.log(` - path: ${package_path}`);
+    console.log(` - creator: ${package_creator}`);
+    console.log(` - address: ${getPackageAddress(package_creator, package_name)}`);
   });
 
 program
@@ -240,6 +248,10 @@ program
     const pendings = await client.signAndsubmitOrmTxns([package_owner], txns);
     const txnrs = await client.waitForOrmTxnsWithResult(pendings, { timeoutSecs: 30, checkSuccess: true });
     txnrs.map((txnr, index) => console.log(`${index}th txn: ${txnr.hash}`));
+    console.log(`package '${package_name}' published`);
+    console.log(` - path: ${package_path}`);
+    console.log(` - creator: ${package_creator}`);
+    console.log(` - address: ${getPackageAddress(package_creator, package_name)}`);
   });
 
 program

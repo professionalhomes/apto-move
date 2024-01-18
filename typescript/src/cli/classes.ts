@@ -1,4 +1,4 @@
-import { toAddress } from '../sdk';
+import { getPackageAddress, toAddress } from '../sdk';
 import { AptosAccount, MaybeHexString } from 'aptos';
 
 export function loadBaseObjectString(
@@ -10,6 +10,7 @@ export function loadBaseObjectString(
 import { OrmClass, OrmField, OrmIndexField } from 'apto_orm';
 
 @OrmClass({
+  package_address: '${getPackageAddress(package_creator, package_name).toShortString()}',
   package_creator: '${toAddress(package_creator).toShortString()}',
   package_name: '${package_name}',
 })
@@ -40,6 +41,7 @@ export function loadBaseTokenString(
 import { OrmTokenClass, OrmField, OrmIndexField } from 'apto_orm';
 
 @OrmTokenClass({
+  package_address: '${getPackageAddress(package_creator, package_name).toShortString()}',
   package_creator: '${toAddress(package_creator).toShortString()}',
   package_name: '${package_name}',
   collection_name: 'AptoORM ${class_name}',
