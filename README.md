@@ -63,7 +63,8 @@ npm install @types/node ts-node --save-dev
 
 ### TypeScript configuration
 
-Also, make sure you are using TypeScript version 4.5 or higher, and you have enabled the following settings in tsconfig.json:
+Also, make sure you are using TypeScript version 4.5 or higher, and you have
+enabled the following settings in tsconfig.json:
 
 ```json
 "emitDecoratorMetadata": true,
@@ -81,10 +82,12 @@ You can start a project with `apto_orm` from scratch. Try the following.
 pnpm init
 
 # add build command to package.json
-jq --arg key "build" --arg val "tsc --build" '.scripts[$key]=$val' package.json | jq "." > _package.json && mv _package.json package.json
+jq --arg key "build" --arg val "tsc --build" '.scripts[$key]=$val' package.json\
+  | jq "." > _package.json && mv _package.json package.json
 
 # add `apto_orm` command to package.json
-jq --arg key "orm" --arg val "apto_orm" '.scripts[$key]=$val' package.json | jq "." > _package.json && mv _package.json package.json
+jq --arg key "orm" --arg val "apto_orm" '.scripts[$key]=$val' package.json \
+  | jq "." > _package.json && mv _package.json package.json
 
 # setup tsconfig
 {
@@ -123,10 +126,11 @@ jq --arg key "orm" --arg val "apto_orm" '.scripts[$key]=$val' package.json | jq 
 ```bash
 # Create a keypair to .key directory
 mkdir -p .key
-aptos key generate --assume-yes --output-file .key/supervlabs
+aptos key generate --assume-yes --output-file .key/villain
 
-# Initialize Aptos account and receive funds of Aptos Coin if devnet or testnet because your package publishing costs Aptos Coin.
-aptos init --network devnet --private-key-file .key/supervlabs --profile supervlabs
+# Initialize Aptos account and receive funds of Aptos Coin 
+# if devnet or testnet because your package publishing costs Aptos Coin.
+aptos init --network devnet --private-key-file .key/villain --profile villain
 ```
 
 ### Create and modify your class.
@@ -135,7 +139,7 @@ Create your sample typescript class by `apto_orm` `init` command.
 This command will create a class file (`MyToken.ts`) to `src/my_tokens`.
 
 ```bash
-npx apto_orm init src/my_tokens --key .key/supervlabs --token -c MyToken
+npx apto_orm init src/my_tokens --key .key/villain --token -c MyToken
 ```
 
 Modify the following token class to suit your taste.
@@ -184,11 +188,13 @@ npx apto_orm generate src/my_tokens
 #  - path: /home/willing/projects/apto_example/src/my_tokens
 ```
 
-The generated module must be compiled and published to your package account. This package account is an object that has the signer capability of your package and is a place where your package bytecodes are stored.
+The generated module must be compiled and published to your package account.  
+This package account is an object that has the signer capability of your package
+and is a place where your package bytecodes are stored.
 
 ```bash
 npx apto_orm compile src/my_tokens
-npx apto_orm publish src/my_tokens --key .key/supervlabs
+npx apto_orm publish src/my_tokens --key .key/villain
 ```
 
 > Please check for information about [Aptos Move language](https://aptos.dev/move/move-on-aptos).
@@ -196,21 +202,26 @@ npx apto_orm publish src/my_tokens --key .key/supervlabs
 ### create, update and delete your apto_orm objects by apto_orm cli
 
 ```bash
-npx apto_orm create src/my_tokens --key .key/supervlabs -c MyToken -d '{ "uri": "https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png", "description": "ok", "id": 1, "name": "ABC" }'
-npx apto_orm create src/my_tokens --key .key/supervlabs --to 0xfd2984f201abdbf30ccd0ec5c2f2357789222c0bbd3c68999acfebe188fdc09d -c MyToken -d '{ "uri": "https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png", "description": "ok", "id": 2, "name": "EFG" }'
-npx apto_orm delete src/my_tokens --key .key/supervlabs -c MyToken -a 0x10dd8012f4c83a2e058347d7178d81432fcadf30cc11e623e2c8ba93a0a786df
+npx apto_orm create src/my_tokens --key .key/villain -c MyToken \
+  -d '{ "uri": "https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png", "description": "ok", "id": 1, "name": "ABC" }'
+npx apto_orm create src/my_tokens --key .key/villain \
+  --to 0xfd2984f201abdbf30ccd0ec5c2f2357789222c0bbd3c68999acfebe188fdc09d -c MyToken \
+  -d '{ "uri": "https://raw.githubusercontent.com/neoul/apto_orm/main/resource.png", "description": "ok", "id": 2, "name": "EFG" }'
+npx apto_orm delete src/my_tokens --key .key/villain -c MyToken \
+  -a 0x10dd8012f4c83a2e058347d7178d81432fcadf30cc11e623e2c8ba93a0a786df
 ```
 
 ## POA (Power Of Attorney)
 
-POA Account is an account that can generate and transfer the transaction. The account has the POA (Power of attorney) creates AptoORM Objects instead of the NFT Creator.
+POA Account is an account that can generate and transfer the transaction.
+The account has the POA (Power of attorney) creates AptoORM Objects instead of the NFT Creator.
 
 ### Initialize POA
 
 ```bash
 aptos key generate --assume-yes --output-file .key/poa1
 aptos init --network devnet --private-key-file .key/poa1 --profile poa1
-npx apto_orm poa register -d .key/supervlabs -l .key/poa1
+npx apto_orm poa register -d .key/villain -l .key/poa1
 npx apto_orm poa show -l .key/poa1
 ```
 
