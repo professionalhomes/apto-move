@@ -211,6 +211,87 @@ npx apto_orm delete src/my_tokens --key .key/villain -c MyToken \
   -a 0x10dd8012f4c83a2e058347d7178d81432fcadf30cc11e623e2c8ba93a0a786df
 ```
 
+## Decorators to make your AptoORM objects
+
+### `OrmClass` and `OrmTokenClass`
+
+`OrmClass` decorates a Typescript class to declare [Aptos Object](https://aptos.dev/standards/aptos-object) that the Object model allows Move to represent a complex type as a set of resources stored within a single address.
+
+```typescript
+@OrmClass({
+  package_creator: '0xabc',
+  package_name: 'Move package name',
+  deletable_by_owner: true,
+  ...
+})
+```
+
+```typescript
+export type OrmObjectConfig = {
+  /** The creator address of the object and package */
+  package_creator: AptosAccount | MaybeHexString;
+  /** The package name where the objects belongs to */
+  package_name: string;
+  package_address?: MaybeHexString; // address of the package
+  /** Aptos creates named objects with predictable hash addresses, which are derived
+   * from user input and the creator's address. This enables named objects to be indexed
+   * and traced based on the user input provided by the creator.
+   * AptoORM facilitates the creation of indexable objects by utilizing `index_fields`
+   * to organize the fields used in the named object creation.
+   * Conversely, if index_fields is not set, OrmObject is created with a random address. */
+  index_fields?: string[];
+  /** Objects created by the class can be transferred by `object::transfer()`. */
+  direct_transfer?: boolean;
+  /** The creator (The owner of OrmCreator object) can remove the ORM objects. */
+  deletable_by_creator?: boolean;
+  /** The owner can remove the ORM objects */
+  deletable_by_owner?: boolean;
+  /** The creator can transfer the ORM objects by AptoORM facilities. */
+  indirect_transfer_by_creator?: boolean;
+  /** The owner can transfer the ORM objects by AptoORM facilities. */
+  indirect_transfer_by_owner?: boolean;
+  /** The creator can extend the ORM objects. */
+  extensible_by_creator?: boolean;
+  /** The owner can extend the ORM objects. */
+  extensible_by_owner?: boolean;
+  named_addresses?: NamedAddresses;
+  /** The token configuration must be set if the OrmObject is Aptos Token object. */
+  token_config?: OrmTokenConfig;
+};
+```
+
+`OrmTokenClass` is used to define custom [Aptos Token Object](https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/aptos-token-objects/sources/token.move). The `OrmTokenClass` should be defined with the `OrmObjectConfig` and additional following attributes.
+
+```typescript
+/** ORM Token configuration */
+export type OrmTokenConfig = {
+  /** The representative name of the token collection (= Aptos Collection Name) */
+  collection_name: string;
+  /** The representative URI of the token collection (= Aptos Collection URI) */
+  collection_uri: string;
+  /** The representative description of the token collection (= Aptos Collection Description) */
+  collection_description: string;
+  /** The maximum token supply of the AptoORM class (= Aptos Collection Max Supply) */
+  max_supply: number | bigint;
+  /** Whether the token uses property map */
+  token_use_property_map: boolean;
+  /** Whether the token has royalty or the collection has royalty itself. */
+  royalty_present: boolean;
+  /** The payee of the royalty */
+  royalty_payee: MaybeHexString | string;
+  /** The denominator of the royalty */
+  royalty_denominator: number;
+  /** The numerator of the royalty */
+  royalty_numerator: number;
+};
+```
+
+### `OrmField`
+
+`OrmField` must be used in the fields of the class decorated by `OrmClass` and `OrmTokenClass`.
+
+
+
 ## POA (Power Of Attorney)
 
 POA Account is an account that can generate and transfer the transaction.
