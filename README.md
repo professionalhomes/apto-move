@@ -286,11 +286,9 @@ export type OrmTokenConfig = {
 };
 ```
 
-### `OrmField`
+### `OrmField` and `OrmIndexField`
 
-`OrmField` must be used in the fields of the class decorated by `OrmClass` and `OrmTokenClass`.
-
-
+`OrmField` and `OrmIndexField` must be used in the fields of the class decorated by `OrmClass` and `OrmTokenClass`. Each class fields decorated by the `OrmField` becomes the field of the resource in an Aptos Object.
 
 ## POA (Power Of Attorney)
 
