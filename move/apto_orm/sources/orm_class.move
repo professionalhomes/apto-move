@@ -203,8 +203,8 @@ module apto_orm::orm_class {
             ),
             royalty_present: collection_royalty_present,
             token_use_property_map: collection_token_use_property_map,
-            token_mutable_by_creator: true,
-            token_mutable_by_owner: true,
+            token_mutable_by_creator: extensible_by_creator,
+            token_mutable_by_owner: extensible_by_owner,
         };
         let class_signer = object::generate_signer(&ref);
         move_to(&class_signer, class);
@@ -249,6 +249,12 @@ module apto_orm::orm_class {
     public fun get_extensible<T: key>(class: Object<T>): (bool, bool) acquires OrmClass {
         let class = borrow_class(&class);
         (class.extensible_by_creator, class.extensible_by_owner)
+    }
+
+    #[view]
+    public fun get_indirect_transfer<T: key>(class: Object<T>): (bool, bool) acquires OrmClass {
+        let class = borrow_class(&class);
+        (class.indirect_transfer_by_creator, class.indirect_transfer_by_owner)
     }
 
     #[view]

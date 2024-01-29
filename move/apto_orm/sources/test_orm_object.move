@@ -56,6 +56,27 @@ module apto_orm::test_orm_object {
         object::object_from_constructor_ref<Board>(&ref)
     }
 
+    public fun create_to(
+        user: &signer,
+        package: address,
+        title: string::String,
+        content: string::String,
+        like: u32,
+        to: address,
+    ): Object<Board>{
+        let (orm_creator, orm_class) = orm_module::get<Board>(package);
+        let creator_signer = orm_creator::load_creator(user, orm_creator);
+        let creator_address = signer::address_of(&creator_signer);
+        let ref = object::create_object(creator_address);
+        let object_signer = orm_object::init<Board>(&creator_signer, &ref, orm_class);
+        let updated_at = timestamp::now_seconds();
+        move_to<Board>(&object_signer, Board {
+            title: title, content: content, updated_at: updated_at, like: like
+        });
+        orm_object::transfer_initially(&ref, to);
+        object::object_from_constructor_ref<Board>(&ref)
+    }
+
     public fun update<T: key>(
         user: &signer,
         object: Object<T>,
@@ -135,5 +156,60 @@ module apto_orm::test_orm_object {
 
         // This should fail because user2 is not the owner of the object.
         delete(user2, board_object2);
+    }
+
+    #[test(aptos = @0x1, user1 = @0x456, user2 = @0x789, apto_orm = @apto_orm)]
+    #[expected_failure(abort_code = 0x50003, location = orm_object)]
+    public entry fun test_orm_object_transfer(aptos: &signer, apto_orm: &signer, user1: &signer, user2: &signer) acquires Board {
+        // use aptos_std::debug;
+        // debug::print<String>(&msg);
+
+        test_utilities::init_network(aptos, 10);
+        let program_address = signer::address_of(apto_orm);
+        let user1_address = signer::address_of(user1);
+        let user2_address = signer::address_of(user2);
+        test_utilities::create_and_fund_account(program_address, 100);
+        test_utilities::create_and_fund_account(user1_address, 100);
+        test_utilities::create_and_fund_account(user2_address, 100);
+        let package_address = orm_creator::get_creator_address(@apto_orm, string::utf8(b"user_package"));
+        // debug::print<address>(&package_address);
+        let package = orm_creator::create_creator(apto_orm, string::utf8(b"user_package"));
+        init_module(&package);
+        power_of_attorney::register_poa(apto_orm, user1, 1000, 0);
+        let board_object1 = create_to(
+            user1,
+            package_address,
+            string::utf8(b"title1"),
+            string::utf8(b"description1"),
+            0,
+            user2_address,
+        );
+        let board_object2 = create(
+            user1,
+            package_address,
+            string::utf8(b"title2"),
+            string::utf8(b"description2"),
+            1,
+        );
+        let board_object1_address = object::object_address(&board_object1);
+        let board_object2_address = object::object_address(&board_object2);
+        let board1 = get(board_object1_address);
+        assert!(board1.title == string::utf8(b"title1"), 1);
+        assert!(board_object1_address != board_object2_address, 1);
+        
+        // indirect transfer by creator
+        orm_object::transfer_indirectly(user1, board_object2, user2_address);
+        assert!(object::owner(board_object2) == user2_address, 1);
+        
+        // indirect transfer by creator
+        orm_object::transfer_indirectly(user1, board_object2, user1_address);
+        assert!(object::owner(board_object2) == user1_address, 1);
+        
+        // direct transfer by owner
+        object::transfer(user1, board_object2, user2_address);
+        assert!(object::owner(board_object2) == user2_address, 1);
+
+        // indirect transfer by owner (should fail)
+        orm_object::transfer_indirectly(user2, board_object2, user1_address);
     }
 }

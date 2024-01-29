@@ -24,6 +24,7 @@ module apto_orm::orm_object {
     const ENOT_ORM_TOKEN: u64 = 7;
     const ETOKEN_NOT_MUTABLE: u64 = 8;
     const ETOKEN_PROPERTY_NOT_MUTABLE: u64 = 9;
+    const EOBJECT_NOT_TRANSFERABLE: u64 = 10;
 
     #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     /// OrmObject for non-token objects
@@ -333,6 +334,42 @@ module apto_orm::orm_object {
         };
         let transfer_ref = object::generate_transfer_ref(ref);
         let linear_ref = object::generate_linear_transfer_ref(&transfer_ref);
+        object::transfer_with_ref(linear_ref, to);
+    }
+
+    /// `transfer_indirectly` - Transfer the object to the given address if
+    /// the object class is configured to allow indirect transfer.
+    public entry fun transfer_indirectly<T: key>(
+        creator_or_owner: &signer,
+        object: Object<T>,
+        to: address,
+    ) acquires OrmObject {
+        let creator_or_owner_address = signer::address_of(creator_or_owner);
+        let object_address = object::object_address(&object);
+        assert!(
+            exists<OrmObject>(object_address),
+            error::not_found(ENOT_ORM_OBJECT),
+        );
+        let orm_object = borrow_global<OrmObject>(object_address);
+        let (creator_indirect_transfer, owner_indirect_transfer)
+            = orm_class::get_indirect_transfer(orm_object.class);
+        assert!(
+            creator_indirect_transfer || owner_indirect_transfer,
+            error::permission_denied(EOBJECT_NOT_TRANSFERABLE),
+        );
+        let creator_authorized = creator_indirect_transfer &&
+            power_of_attorney::is_authorized(&orm_object.creator, creator_or_owner_address);
+        let owner_authorized = owner_indirect_transfer && creator_or_owner_address == object::owner(object);
+        assert!(
+            creator_authorized || owner_authorized,
+            error::permission_denied(EOPERATION_NOT_AUTHORIZED),
+        );
+        assert!(
+            option::is_some(&orm_object.transfer_ref),
+            error::permission_denied(EOBJECT_NOT_TRANSFERABLE),
+        );
+        let transfer_ref = option::borrow(&orm_object.transfer_ref);
+        let linear_ref = object::generate_linear_transfer_ref(transfer_ref);
         object::transfer_with_ref(linear_ref, to);
     }
 
