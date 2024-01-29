@@ -73,6 +73,11 @@ describe('AptoORM Token', () => {
     console.log('createTxn', txnr.hash);
     const membership_address = client.retrieveOrmObjectAddressFromTxnr(txnr, { object_type: 'Membership' });
 
+    txn = await client.transferForciblyTxn(package_creator, membership, '0x0');
+    ptxn = await client.signAndsubmitOrmTxn([package_creator], txn);
+    txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
+    console.log('transferForciblyTxn', txnr.hash);
+
     console.log('membership_address', membership_address);
 
     txn = await client.deleteTxn(package_creator, membership);

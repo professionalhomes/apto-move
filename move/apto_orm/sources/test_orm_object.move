@@ -197,19 +197,19 @@ module apto_orm::test_orm_object {
         assert!(board1.title == string::utf8(b"title1"), 1);
         assert!(board_object1_address != board_object2_address, 1);
         
-        // indirect transfer by creator
-        orm_object::transfer_indirectly(user1, board_object2, user2_address);
+        // indirect transfer (transfer by force) by creator
+        orm_object::transfer_forcibly(user1, board_object2, user2_address);
         assert!(object::owner(board_object2) == user2_address, 1);
         
-        // indirect transfer by creator
-        orm_object::transfer_indirectly(user1, board_object2, user1_address);
+        // indirect transfer (transfer by force) by creator
+        orm_object::transfer_forcibly(user1, board_object2, user1_address);
         assert!(object::owner(board_object2) == user1_address, 1);
         
         // direct transfer by owner
         object::transfer(user1, board_object2, user2_address);
         assert!(object::owner(board_object2) == user2_address, 1);
 
-        // indirect transfer by owner (should fail)
-        orm_object::transfer_indirectly(user2, board_object2, user1_address);
+        // indirect transfer (transfer by force) by owner (should fail)
+        orm_object::transfer_forcibly(user2, board_object2, user1_address);
     }
 }

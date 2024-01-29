@@ -337,9 +337,9 @@ module apto_orm::orm_object {
         object::transfer_with_ref(linear_ref, to);
     }
 
-    /// `transfer_indirectly` - Transfer the object to the given address if
+    /// `transfer_forcibly` - Transfer the object to the given address if
     /// the object class is configured to allow indirect transfer.
-    public entry fun transfer_indirectly<T: key>(
+    public entry fun transfer_forcibly<T: key>(
         creator_or_owner: &signer,
         object: Object<T>,
         to: address,
