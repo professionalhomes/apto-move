@@ -11,16 +11,14 @@ import orm, {
   loadAccountFromPrivatekeyFile,
   toAddress,
 } from '../sdk';
-import { AptosAccount } from 'aptos';
+import { AptosAccount, MaybeHexString } from 'aptos';
 import yaml from 'yaml';
 import { loadBaseObjectString, loadBaseTokenString } from './classes';
 import { loadOrmClient, checkPackagePath, loadPackageClasses, getNodeUrl } from './utilities';
 import { poa } from './poa';
 import { collection } from './collection';
-
 export const program = new Command();
-program.version('1.0.0');
-program.name('aptorm');
+program.name('apto_orm');
 program.description('Aptos Onchain Move ORM (Object–relational mapping)');
 program.option('-n, --node_url <node_url>', 'Aptos Node URL');
 program.option('  , --prepay_url <prepay_url>', 'The free prepay URL');
@@ -377,8 +375,96 @@ program
     console.log(`created objects:`, objects);
   });
 
+export const class_cmd = new Command('class');
+class_cmd.description('AptoORM Class operations');
+class_cmd
+  .command('retrieve')
+  .description('retrieve the classes information in a package')
+  .option('-a, --address <ADDRESS>', 'The package address')
+  .option('  , --creator <ADDRESS>', 'The package creator')
+  .option('  , --class_name <CLASS_NAME>', 'The class name included in the package')
+  .action(async function () {
+    const client = loadOrmClient(program);
+    const { address, creator, class_name } = this.opts();
+    let package_address: MaybeHexString = address as string;
+    if (!address) {
+      if (!creator) {
+        throw new Error(`address or creator must be specified`);
+      }
+      if (!class_name) {
+        throw new Error(`class_name must be specified with creator flag`);
+      }
+      package_address = getPackageAddress(creator, class_name);
+    }
+
+    const resources = await client.getAccountResources(package_address);
+    for (const resource of resources) {
+      if (resource.type.startsWith(`${client.ormAddress}::orm_module::OrmModule<`) && resource.type.endsWith(`>`)) {
+        const class_type = resource.type.split('<')[1].split('>')[0];
+        const class_address = (resource?.data as any)?.class?.inner;
+        const signer_address = (resource?.data as any)?.signer?.inner;
+        console.log(`[package]`);
+        console.log(`package creator: ${signer_address}`);
+        console.log(`package name: ${class_name}`);
+        console.log(`package address: ${package_address}`);
+        console.log(`class type: ${class_type}`);
+        console.log(`class address: ${class_address}`);
+
+        console.log(await client.getAccountResources(class_address));
+      }
+    }
+  });
+
+class_cmd
+  .command('set-uri')
+  .description('Set the URI of the AptoORM Class (Collection)')
+  .requiredOption('-k, --key <key_file>', 'The private key file of the package owner')
+  .option('-a, --address <ADDRESS>', 'The package address')
+  .option('  , --creator <ADDRESS>', 'The package creator')
+  .option('  , --class_name <CLASS_NAME>', 'The class name included in the package')
+  .requiredOption('-u, --uri <uri>', 'The uri of the ORM Token class')
+  .action(async function () {
+    const client = loadOrmClient(this);
+    const { key, address, creator, class_name, uri } = this.opts();
+    const package_owner = loadAccountFromPrivatekeyFile(key);
+    let package_address: MaybeHexString = address as string;
+    if (!address) {
+      if (!creator) {
+        throw new Error(`address or creator must be specified`);
+      }
+      if (!class_name) {
+        throw new Error(`class_name must be specified with creator flag`);
+      }
+      package_address = getPackageAddress(creator, class_name);
+    }
+
+    const resources = await client.getAccountResources(package_address);
+    for (const resource of resources) {
+      if (resource.type.startsWith(`${client.ormAddress}::orm_module::OrmModule<`)) {
+        const class_type = resource.type.split('<')[1].split('>')[0];
+        const class_address = (resource?.data as any)?.class?.inner;
+        if (class_type.includes(class_name)) {
+          console.log(`matched token class found in ${class_address}`);
+          // console.log(await client.getAccountResources(class_address));
+          break;
+        }
+      }
+    }
+    if (!package_address) {
+      throw new Error(`token class ${class_name} not found`);
+    }
+    const txn = await client.generateOrmTxn([package_owner], {
+      function: `${client.ormAddress}::orm_class::set_uri`,
+      type_arguments: [`0x1::object::ObjectCore`],
+      arguments: [address, uri],
+    });
+    const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
+    const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
+    console.log(`txn: ${txnr.hash}`);
+  });
+
 program.addCommand(poa);
-program.addCommand(collection);
+program.addCommand(class_cmd);
 
 async function main() {
   await program.parseAsync(process.argv);
