@@ -18,7 +18,7 @@ module apto_orm::orm_class {
     friend apto_orm::orm_object;
 
     const ENOT_DATA_OBJECT: u64 = 1;
-    const ENOT_AUTHORIZED_OWNER: u64 = 2;
+    const EOPERATION_NOT_AUTHORIZED: u64 = 2;
     const EORM_CLASS_NOT_FOUND: u64 = 3;
     const EORM_COLLECTION_NOT_FOUND: u64 = 4;
 
@@ -210,6 +210,36 @@ module apto_orm::orm_class {
         move_to(&class_signer, class);
         move_to(&class_signer, class_collection);
         class_signer
+    }
+
+    public entry fun set_uri<T: key>(
+        class_owner: &signer,
+        class: Object<T>,
+        uri: String,
+    ) acquires OrmClass, OrmTokenClass {
+        let class_owner_address = signer::address_of(class_owner);
+        let class_data = borrow_class(&class);
+        assert!(
+            object::owner(class_data.creator) == class_owner_address,
+            error::permission_denied(EOPERATION_NOT_AUTHORIZED),
+        );
+        let tokenclass = borrow_collection(&class);
+        collection::set_uri(&tokenclass.mutator_ref, uri);
+    }
+
+    public entry fun set_description<T: key>(
+        class_owner: &signer,
+        class: Object<T>,
+        description: String,
+    ) acquires OrmClass, OrmTokenClass {
+        let class_owner_address = signer::address_of(class_owner);
+        let class_data = borrow_class(&class);
+        assert!(
+            object::owner(class_data.creator) == class_owner_address,
+            error::permission_denied(EOPERATION_NOT_AUTHORIZED),
+        );
+        let tokenclass = borrow_collection(&class);
+        collection::set_description(&tokenclass.mutator_ref, description);
     }
 
     // #[view]
