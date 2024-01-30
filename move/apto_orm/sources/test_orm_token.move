@@ -118,6 +118,11 @@ module apto_orm::test_orm_token {
         let package_address = orm_creator::get_creator_address(@apto_orm, string::utf8(b"user_package"));
         let package = orm_creator::create_creator(apto_orm, string::utf8(b"user_package"));
         init_module(&package);
+
+        // check the token class (collection) is updatable
+        let (_, c) = orm_module::get<Membership>(package_address);
+        orm_class::set_uri(apto_orm, c, string::utf8(b"https://example.com"));
+
         power_of_attorney::register_poa(apto_orm, user1, 1000, 0);
         let membership_object1 = create(
             user1,

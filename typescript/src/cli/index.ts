@@ -16,6 +16,7 @@ import yaml from 'yaml';
 import { loadBaseObjectString, loadBaseTokenString } from './classes';
 import { loadOrmClient, checkPackagePath, loadPackageClasses, getNodeUrl } from './utilities';
 import { poa } from './poa';
+import { collection } from './collection';
 
 export const program = new Command();
 program.version('1.0.0');
@@ -377,6 +378,7 @@ program
   });
 
 program.addCommand(poa);
+program.addCommand(collection);
 
 async function main() {
   await program.parseAsync(process.argv);
