@@ -377,8 +377,7 @@ program
     console.log(`created objects:`, objects);
   });
 
-export const orm_class = new Command('class');
-orm_class
+export const orm_class = new Command('class')
   .description('Update the fields of a AptoORM Class (Collection)')
   .argument('[set-uri|set-description]', 'Update the uri or description of a AptoORM Class (Collection)')
   .requiredOption('-k, --key <key_file>', 'The private key file of the package owner')
@@ -418,46 +417,6 @@ orm_class
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
     console.log(YAML.stringify({ result: { txn: txnr.hash, class_address: target_class_address } }));
   });
-
-// orm_class
-//   .command('set-description')
-//   .description('Update the description of a AptoORM Class (Collection)')
-//   .requiredOption('-k, --key <key_file>', 'The private key file of the package owner')
-//   .option('-p, --path <package_path>', 'The package path')
-//   .option('-a, --address <ADDRESS>', 'The package address')
-//   .option('-c, --creator <ADDRESS>', 'The package creator')
-//   .option('-n, --name <PACKAGE_NAME>', 'The name of the package')
-//   .option('  , --class_address <CLASS_ADDRESS>', 'The class address to be updated')
-//   .option('  , --class_name <CLASS_NAME>', 'The class name included in the package')
-//   .requiredOption('-u, --uri <uri>', 'The uri of the ORM Token class')
-//   .action(async function () {
-//     const client = loadOrmClient(this);
-//     const { key, class_address, class_name, uri } = this.opts();
-//     let target_class_address = class_address;
-//     if (!class_address) {
-//       const [package_creator, package_name, package_address] = loadPackageAddress(this);
-//       const resources = await client.getAccountResources(package_address);
-//       for (const resource of resources) {
-//         if (resource.type.startsWith(`${client.ormAddress}::orm_module::OrmModule<`)) {
-//           const class_type = resource.type.split('<')[1].split('>')[0];
-//           const class_address = (resource?.data as any)?.class?.inner;
-//           if (class_type.includes(class_name)) {
-//             target_class_address = class_address;
-//             break;
-//           }
-//         }
-//       }
-//     }
-//     const package_owner = loadAccountFromPrivatekeyFile(key);
-//     const txn = await client.generateOrmTxn([package_owner], {
-//       function: `${client.ormAddress}::orm_class::set_uri`,
-//       type_arguments: [`0x1::object::ObjectCore`],
-//       arguments: [target_class_address, uri],
-//     });
-//     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
-//     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
-//     console.log(YAML.stringify({ result: { txn: txnr.hash, class_address: target_class_address } }));
-//   });
 
 program.addCommand(poa);
 program.addCommand(orm_class);

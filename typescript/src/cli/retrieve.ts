@@ -6,9 +6,6 @@ import orm, {
   getOrmPackageCreator,
   getPackageAddress,
   loadAccountFromPrivatekeyFile,
-  loadOrmClassMetadata,
-  parseJson,
-  stringifyJson,
 } from '../sdk';
 import fs from 'fs';
 import path from 'path';
@@ -16,10 +13,11 @@ import YAML from 'yaml';
 
 export function loadPackageAddress(program: Command) {
   const { key, address, creator, name } = program.optsWithGlobals();
-  const package_path = program.args[0];
+  const package_path = program.opts()?.path || program.args[0];
   let package_name = name || package_path ? path.basename(package_path) : undefined;
   let package_creator = creator;
   let package_address: MaybeHexString = address as string;
+  // console.log({ package_path, package_name, package_creator, package_address});
   if (!package_address) {
     if (creator && name) {
       package_address = getPackageAddress(creator, name);
@@ -33,8 +31,9 @@ export function loadPackageAddress(program: Command) {
         package_address = getPackageAddress(package_creator, package_name);
       }
     }
+    // console.log({ package_address })
   }
-  if (!package_address) {
+  if (!package_creator) {
     if (package_name) package_creator = getOrmPackageCreator(package_name);
   }
   if (!package_address) {
@@ -56,7 +55,7 @@ retrieve
   .action(async function () {
     const client = loadOrmClient(retrieve);
     const { class_name } = this.opts();
-    const [package_creator, package_name, package_address] = loadPackageAddress(retrieve);
+    const [package_creator, package_name, package_address] = loadPackageAddress(this);
     const output: any = {
       package_creator,
       package_name,
