@@ -387,10 +387,10 @@ export const orm_class = new Command('class')
   .option('-n, --name <PACKAGE_NAME>', 'The name of the package')
   .option('  , --class_address <CLASS_ADDRESS>', 'The class address to be updated')
   .option('  , --class_name <CLASS_NAME>', 'The class name included in the package')
-  .requiredOption('-d, --d <uri|description>', 'The uri or description of the ORM Token class')
+  .requiredOption('-d, --data <uri|description>', 'The uri or description of the ORM Token class')
   .action(async function () {
     const client = loadOrmClient(this);
-    const { key, class_address, class_name, uri } = this.opts();
+    const { key, class_address, class_name, data } = this.opts();
     let target_class_address = class_address;
     if (!class_address) {
       const [package_creator, package_name, package_address] = loadPackageAddress(this);
@@ -411,7 +411,7 @@ export const orm_class = new Command('class')
     const txn = await client.generateOrmTxn([package_owner], {
       function: `${client.ormAddress}::orm_class::${this.args[0] == 'set-uri' ? 'set_uri' : 'set_description'}`,
       type_arguments: [`0x1::object::ObjectCore`],
-      arguments: [target_class_address, uri],
+      arguments: [target_class_address, data],
     });
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
