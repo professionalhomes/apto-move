@@ -387,7 +387,7 @@ export const orm_class = new Command('class')
   .option('-n, --name <PACKAGE_NAME>', 'The name of the package')
   .option('  , --class_address <CLASS_ADDRESS>', 'The class address to be updated')
   .option('  , --class_name <CLASS_NAME>', 'The class name included in the package')
-  .requiredOption('-u, --uri <uri>', 'The uri of the ORM Token class')
+  .requiredOption('-d, --d <uri|description>', 'The uri or description of the ORM Token class')
   .action(async function () {
     const client = loadOrmClient(this);
     const { key, class_address, class_name, uri } = this.opts();
@@ -415,7 +415,7 @@ export const orm_class = new Command('class')
     });
     const ptxn = await client.signAndsubmitOrmTxn([package_owner], txn);
     const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
-    console.log(YAML.stringify({ result: { txn: txnr.hash, class_address: target_class_address } }));
+    console.log(YAML.stringify({ result: { txn: txnr.hash, command: this.args[0], class_address: target_class_address } }));
   });
 
 program.addCommand(poa);
