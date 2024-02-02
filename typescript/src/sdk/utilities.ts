@@ -311,3 +311,25 @@ export function getOrmObjectAddress(ormobj: OrmObjectLiteral) {
   }
   return (ormobj as any)[object_addr];
 }
+
+export function getClassAddress<OrmObject extends OrmObjectLiteral>(
+  target: OrmObjectType<OrmObject> | OrmObjectLiteral | OrmObjectAddressable | string
+) {
+  if (!target) {
+    throw new Error('target is required');
+  }
+  let address: HexString;
+  let metadata: OrmClassMetadata;
+  if (typeof target === 'function') {
+    const orm_class = target as OrmObjectType<OrmObject>;
+    metadata = getOrmClassMetadata(orm_class);
+  } else {
+    metadata = getOrmClassMetadata(target);
+  }
+  if (metadata.token_config) {
+    address = getNamedObjectAddress(metadata.package_address, [metadata.token_config.collection_name]);
+  } else {
+    address = getNamedObjectAddress(metadata.package_address, [metadata.name]);
+  }
+  return address;
+}

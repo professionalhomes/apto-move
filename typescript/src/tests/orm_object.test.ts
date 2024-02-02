@@ -76,6 +76,12 @@ describe('AptoORM Object', () => {
     a.like = 10;
     expect(a.title).toBe('First board title');
 
+    const classAddr = orm.getClassAddress(Board).toShortString();
+    expect(classAddr).toBeDefined();
+    expect(orm.getClassAddress(a).toShortString()).toBe(classAddr);
+    expect(orm.getClassAddress("Board").toShortString()).toBe(classAddr);
+
+
     const b: Board = new Board({
       id: Math.floor(Math.random() * 1000000),
       title: '2th title',
