@@ -477,10 +477,19 @@ export class OrmClient extends AptosClient {
 
   async transferForciblyTxn<OrmObject extends OrmObjectLiteral>(
     user: AptosAccount | MaybeHexString,
-    obj: OrmObjectTarget<OrmObject>,
+    obj: OrmObjectTarget<OrmObject> | MaybeHexString,
     to: MaybeHexString,
     options?: OrmTxnOptions) {
-      const { address, metadata } = loadOrmClassMetadata(obj, true);
+      let address: MaybeHexString;
+      if (obj instanceof HexString) {
+        address = obj;
+      } else if (typeof obj === 'string') {
+        address = obj;
+      }
+      else {
+        const { address: _address } = loadOrmClassMetadata(obj, true);
+        address = _address;
+      }
       return await this.generateOrmTxn(
         [user],
         {

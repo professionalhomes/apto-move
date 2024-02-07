@@ -377,6 +377,27 @@ program
     console.log(`created objects:`, objects);
   });
 
+
+program
+  .command('transfer-by-force')
+  .description('Transfer a target object using indirect transfer method')
+  .requiredOption('-a, --address <ADDRESS>', 'The address of the object to transfer')
+  .requiredOption('-t, --to <ADDRESS>', 'The address received the object')
+  .requiredOption('-k, --key <key_file>', 'The private key file of the object owner or the creator')
+  .action(async function () {
+    const client = loadOrmClient(program);
+    const { key, address, to } = this.opts();
+    let creator_or_owner: AptosAccount;
+    if (!key) {
+      throw new Error(`key file not specified`);
+    }
+    creator_or_owner = loadAccountFromPrivatekeyFile(key);
+    const txn = await client.transferForciblyTxn(creator_or_owner, address, to);
+    const ptxn = await client.signAndsubmitOrmTxn([creator_or_owner], txn);
+    const txnr = await client.waitForOrmTxnWithResult(ptxn, { timeoutSecs: 30, checkSuccess: true });
+    console.log(`txn: ${txnr.hash}`);
+  });
+
 export const orm_class = new Command('class')
   .description('Update the fields of a AptoORM Class (Collection)')
   .argument('[set-uri|set-description]', 'Update the uri or description of a AptoORM Class (Collection)')

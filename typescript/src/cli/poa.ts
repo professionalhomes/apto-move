@@ -149,7 +149,10 @@ poa
     } else {
       throw new Error('either delegator or delegator_address should be specified');
     }
-    const resource = await client.getAccountResource(poa_address, `${client.ormAddress}::power_of_attorney::PowerOfAttorney`);
+    const resource = await client.getAccountResource(
+      poa_address,
+      `${client.ormAddress}::power_of_attorney::PowerOfAttorney`
+    );
     console.log(resource);
   });
 
