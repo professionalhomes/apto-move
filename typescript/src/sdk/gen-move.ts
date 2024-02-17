@@ -83,6 +83,7 @@ export const constErrorCode = (errorCode: string) => {
 
 export const defineStruct = (class_data: OrmClassMetadata) => {
   const code: string[] = [];
+  code.push(print(`#[resource_group_member(group = aptos_framework::object::ObjectGroup)]`));
   code.push(indent(`struct ${class_data.name} has key, copy, drop {`));
   class_data.fields.forEach((field) => {
     if (field.token_field) return;
