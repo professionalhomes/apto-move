@@ -10,6 +10,8 @@ export enum AccountScheme {
   MULTI_ED25519_SCHEME = 1,
 }
 
+
+
 export type PowerOfAttorneyProofTicket = {
   address: MaybeHexString;
   module: string;
