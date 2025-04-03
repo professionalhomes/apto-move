@@ -15,6 +15,7 @@ export type AptosPrimitiveTypeName =
 
 export type AptosTypeName = AptosPrimitiveTypeName | 'string' | 'vector';
 
+
 export type OrmType = Types.MoveType;
 export type OrmValue = Types.MoveValue;
 // export interface OrmField extends Types.MoveStructField {}
